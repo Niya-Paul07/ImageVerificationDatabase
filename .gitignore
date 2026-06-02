@@ -1,0 +1,15 @@
+# Database
+*.db
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.env
+
+# Uploaded photos
+static/uploads/
+
+# IDE
+.vscode/
+.idea/
