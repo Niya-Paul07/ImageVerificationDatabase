@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Exam Registration Platform</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: 220px;
+      height: 100vh;
+      background: #042C53;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem 1rem;
+      z-index: 100;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(181,212,244,0.15);
+    }
+
+    .sidebar-brand i { font-size: 22px; color: #B5D4F4; }
+    .sidebar-brand-text { font-size: 13px; font-weight: 600; color: #fff; line-height: 1.4; }
+    .sidebar-brand-sub { font-size: 11px; color: rgba(181,212,244,0.6); }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: rgba(181,212,244,0.7);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 4px;
+      transition: all 0.15s;
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .nav-item:hover { background: rgba(181,212,244,0.1); color: #fff; }
+    .nav-item.active { background: rgba(181,212,244,0.15); color: #fff; }
+    .nav-item i { font-size: 16px; width: 18px; }
+
+    .sidebar-spacer { flex: 1; }
+
+    .logout-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: rgba(181,212,244,0.7);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      transition: all 0.15s;
+    }
+
+    .logout-btn:hover { background: rgba(220,80,80,0.15); color: #f09595; }
+    .logout-btn i { font-size: 16px; }
+
+    /* Main content */
+    .main {
+      margin-left: 220px;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: #1a1a2e;
+      margin-bottom: 0.25rem;
+    }
+
+    .page-sub {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 2rem;
+    }
+
+    /* Stat cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-label i { font-size: 14px; }
+    .stat-value { font-size: 28px; font-weight: 600; color: #1a1a2e; }
+    .stat-sub { font-size: 12px; color: #aaa; margin-top: 4px; }
+
+    /* Cards */
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a1a2e;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title i { color: #185FA5; }
+
+    /* Search */
+    .search-wrap {
+      position: relative;
+      max-width: 280px;
+    }
+
+    .search-wrap i {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    .search-wrap input {
+      padding: 8px 12px 8px 32px;
+      border: 1px solid #dde1e7;
+      border-radius: 8px;
+      font-size: 13px;
+      width: 100%;
+      outline: none;
+      background: #fafafa;
+    }
+
+    .search-wrap input:focus {
+      border-color: #185FA5;
+      background: #fff;
+    }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      text-align: left;
+      padding: 10px 12px;
+      color: #888;
+      font-weight: 500;
+      border-bottom: 1px solid #f0f0f0;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 12px 12px;
+      color: #1a1a2e;
+      border-bottom: 1px solid #f8f8f8;
+      vertical-align: middle;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafcff; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge.pass { background: #EAF3DE; color: #3B6D11; }
+    .badge.fail { background: #fcebeb; color: #a32d2d; }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: #aaa;
+      font-size: 13px;
+    }
+
+    .empty-state i { font-size: 32px; display: block; margin-bottom: 0.5rem; }
+
+    /* Quick actions */
+    .actions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 1rem 1.25rem;
+      border-radius: 10px;
+      border: 1.5px solid #dde1e7;
+      background: #fafafa;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s;
+      color: #1a1a2e;
+    }
+
+    .action-btn:hover {
+      border-color: #185FA5;
+      background: #f5f9ff;
+    }
+
+    .action-icon {
+      width: 40px; height: 40px;
+      border-radius: 8px;
+      background: #042C53;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .action-icon i { color: #B5D4F4; font-size: 18px; }
+    .action-label { font-size: 14px; font-weight: 600; }
+    .action-sub { font-size: 12px; color: #888; }
+
+    .loading { color: #aaa; font-size: 13px; text-align: center; padding: 1rem; }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <i class="fa-solid fa-shield-halved"></i>
+    <div>
+      <div class="sidebar-brand-text">Exam Registration</div>
+      <div class="sidebar-brand-sub">C-DIT, Trivandrum</div>
+    </div>
+  </div>
+
+  <a href="/dashboard" class="nav-item active"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+  <a href="/register" class="nav-item"><i class="fa-solid fa-user-plus"></i> Register student</a>
+  <a href="/verify-page" class="nav-item"><i class="fa-solid fa-face-smile"></i> Verify student</a>
+
+  <div class="sidebar-spacer"></div>
+
+  <button class="logout-btn" onclick="handleLogout()">
+    <i class="fa-solid fa-right-from-bracket"></i> Logout
+  </button>
+</div>
+
+<!-- Main content -->
+<div class="main">
+  <div class="page-title">Dashboard</div>
+  <div class="page-sub" id="welcomeText">Welcome back, Admin</div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label"><i class="fa-solid fa-users" style="color:#185FA5"></i> Total students</div>
+      <div class="stat-value" id="statTotal">—</div>
+      <div class="stat-sub">Registered</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label"><i class="fa-solid fa-circle-check" style="color:#3B6D11"></i> Passed</div>
+      <div class="stat-value" id="statPass">—</div>
+      <div class="stat-sub">Verifications</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label"><i class="fa-solid fa-circle-xmark" style="color:#a32d2d"></i> Failed</div>
+      <div class="stat-value" id="statFail">—</div>
+      <div class="stat-sub">Verifications</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label"><i class="fa-solid fa-clock" style="color:#888"></i> Total checks</div>
+      <div class="stat-value" id="statTotal2">—</div>
+      <div class="stat-sub">All time</div>
+    </div>
+  </div>
+
+  <!-- Quick actions -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="fa-solid fa-bolt"></i> Quick actions</div>
+    </div>
+    <div class="actions-grid">
+      <a href="/register" class="action-btn">
+        <div class="action-icon"><i class="fa-solid fa-user-plus"></i></div>
+        <div>
+          <div class="action-label">Register student</div>
+          <div class="action-sub">Add a new student to the system</div>
+        </div>
+      </a>
+      <a href="/verify-page" class="action-btn">
+        <div class="action-icon"><i class="fa-solid fa-face-smile"></i></div>
+        <div>
+          <div class="action-label">Verify student</div>
+          <div class="action-sub">Run face verification at exam entry</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Student list -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="fa-solid fa-users"></i> Registered students</div>
+      <div class="search-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="studentSearch" placeholder="Search by name or ID…" oninput="filterStudents()" />
+      </div>
+    </div>
+    <div id="studentTableWrap">
+      <div class="loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading…</div>
+    </div>
+  </div>
+
+  <!-- Recent verifications -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Recent verifications</div>
+    </div>
+    <div id="verificationTableWrap">
+      <div class="loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading…</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let allStudents = [];
+
+  async function loadDashboard() {
+    try {
+      const res = await fetch('http://127.0.0.1:5000/api/dashboard', { credentials: 'include' });
+      const data = await res.json();
+
+      if (data.error) { window.location.href = '/'; return; }
+
+      document.getElementById('statTotal').textContent = data.total_students;
+      document.getElementById('statPass').textContent = data.total_pass;
+      document.getElementById('statFail').textContent = data.total_fail;
+      document.getElementById('statTotal2').textContent = data.total_verifications;
+
+      allStudents = data.students;
+      renderStudentTable(allStudents);
+      renderVerificationTable(data.recent_verifications);
+
+    } catch {
+      document.getElementById('studentTableWrap').innerHTML = '<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Could not load data. Is Flask running?</div>';
+    }
+  }
+
+  function renderStudentTable(students) {
+    const wrap = document.getElementById('studentTableWrap');
+    if (students.length === 0) {
+      wrap.innerHTML = '<div class="empty-state"><i class="fa-solid fa-users-slash"></i>No students registered yet.</div>';
+      return;
+    }
+    wrap.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Student ID</th>
+            <th>Full name</th>
+            <th>Department</th>
+            <th>Email</th>
+            <th>Registered</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${students.map(s => `
+            <tr>
+              <td><strong>${s.student_id}</strong></td>
+              <td>${s.full_name}</td>
+              <td>${s.department || '—'}</td>
+              <td>${s.email || '—'}</td>
+              <td>${s.registered_at ? s.registered_at.split('.')[0] : '—'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  function renderVerificationTable(logs) {
+    const wrap = document.getElementById('verificationTableWrap');
+    if (logs.length === 0) {
+      wrap.innerHTML = '<div class="empty-state"><i class="fa-solid fa-clock-rotate-left"></i>No verifications yet.</div>';
+      return;
+    }
+    wrap.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Student ID</th>
+            <th>Result</th>
+            <th>Accuracy</th>
+            <th>Verified by</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${logs.map(l => `
+            <tr>
+              <td><strong>${l.student_id}</strong></td>
+              <td><span class="badge ${l.result.toLowerCase()}">${l.result}</span></td>
+              <td>${l.accuracy_percentage}%</td>
+              <td>${l.verified_by || '—'}</td>
+              <td>${l.verified_at ? l.verified_at.split('.')[0] : '—'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  function filterStudents() {
+    const q = document.getElementById('studentSearch').value.toLowerCase();
+    const filtered = allStudents.filter(s =>
+      s.student_id.toLowerCase().includes(q) ||
+      s.full_name.toLowerCase().includes(q) ||
+      (s.department || '').toLowerCase().includes(q)
+    );
+    renderStudentTable(filtered);
+  }
+
+  async function handleLogout() {
+    await fetch('http://127.0.0.1:5000/admin/logout', { method: 'POST', credentials: 'include' });
+    window.location.href = '/';
+  }
+
+  loadDashboard();
+</script>
+
+</body>
+</html>

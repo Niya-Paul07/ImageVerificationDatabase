@@ -16,18 +16,62 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
+from functools import wraps
+from flask import redirect, url_for
+
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if "admin" not in session:
+            return redirect(url_for("index"))
+        return f(*args, **kwargs)
+    return decorated
+
 # ── Pages ─────────────────────────────────────────────────
 @app.route("/")
 def index():
     return render_template("login.html")
 
 @app.route("/register")
+@login_required
 def register():
     return render_template("register.html")
 
 @app.route("/verify-page")
+@login_required
 def verify_page():
     return render_template("verify.html")
+
+@app.route("/dashboard")
+@login_required
+def dashboard():
+    return render_template("dashboard.html")
+
+@app.route("/api/dashboard")
+@login_required
+def api_dashboard():
+    conn = get_db()
+    total_students = conn.execute("SELECT COUNT(*) FROM students").fetchone()[0]
+    total_verifications = conn.execute("SELECT COUNT(*) FROM verification_logs").fetchone()[0]
+    total_pass = conn.execute("SELECT COUNT(*) FROM verification_logs WHERE result='PASS'").fetchone()[0]
+    total_fail = conn.execute("SELECT COUNT(*) FROM verification_logs WHERE result='FAIL'").fetchone()[0]
+    students = conn.execute("SELECT student_id, full_name, department, email, registered_at FROM students ORDER BY registered_at DESC").fetchall()
+    recent_verifications = conn.execute("SELECT student_id, result, accuracy_percentage, verified_by, verified_at FROM verification_logs ORDER BY verified_at DESC LIMIT 20").fetchall()
+    conn.close()
+
+    return jsonify({
+        "total_students": total_students,
+        "total_verifications": total_verifications,
+        "total_pass": total_pass,
+        "total_fail": total_fail,
+        "students": [dict(s) for s in students],
+        "recent_verifications": [dict(v) for v in recent_verifications]
+    })
+
+@app.route("/admin/logout", methods=["POST"])
+def logout():
+    session.pop("admin", None)
+    return jsonify({"message": "Logged out"})
 
 # ── Admin Login ──────────────────────────────────────────
 @app.route("/admin/login", methods=["POST"])
