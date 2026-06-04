@@ -21,6 +21,14 @@ def get_db():
 def index():
     return render_template("login.html")
 
+@app.route("/register")
+def register():
+    return render_template("register.html")
+
+@app.route("/verify-page")
+def verify_page():
+    return render_template("verify.html")
+
 # ── Admin Login ──────────────────────────────────────────
 @app.route("/admin/login", methods=["POST"])
 def admin_login():

@@ -202,7 +202,7 @@
       if (data.message) {
         successMsg.style.display = 'flex';
         btn.innerHTML = '<i class="fa-solid fa-check"></i> Logged in!';
-        setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
+        setTimeout(() => { window.location.href = '/register'; }, 1500);
       } else {
         errText.textContent = data.error || 'Login failed.';
         errMsg.style.display = 'flex';
