@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, session
 import sqlite3
 import bcrypt
-import face_recognition
+from deepface import DeepFace
 import numpy as np
 import json
 import io
@@ -103,17 +103,12 @@ def register_student():
     if not all([student_id, full_name, dob, photo]):
         return jsonify({"error": "Missing required fields"}), 400
 
-    # Read photo and extract face embedding
     img_bytes = photo.read()
-    image = face_recognition.load_image_file(io.BytesIO(img_bytes))
-    encodings = face_recognition.face_encodings(image)
-
-    if len(encodings) == 0:
-        return jsonify({"error": "No face detected in photo"}), 400
-    if len(encodings) > 1:
-        return jsonify({"error": "Multiple faces detected. Please upload a single face photo"}), 400
-
-    embedding = json.dumps(encodings[0].tolist())
+    try:
+        embedding_obj = DeepFace.represent(img_path=np.frombuffer(img_bytes, np.uint8), model_name="Facenet", enforce_detection=True)
+        embedding = json.dumps(embedding_obj[0]["embedding"])
+    except Exception as e:
+        return jsonify({"error": "No face detected in photo. Please upload a clear front-facing photo."}), 400
 
     conn = get_db()
     try:
@@ -147,17 +142,14 @@ def verify_student():
 
     # Load live photo and extract embedding
     img_bytes = photo.read()
-    live_image = face_recognition.load_image_file(io.BytesIO(img_bytes))
-    live_encodings = face_recognition.face_encodings(live_image)
 
-    if len(live_encodings) == 0:
-        conn.close()
-        return jsonify({"error": "No face detected in captured photo"}), 400
 
-    # Compare embeddings
     stored_embedding = np.array(json.loads(student["face_embedding"]))
-    distance = face_recognition.face_distance([stored_embedding], live_encodings[0])[0]
-    accuracy_percentage = round((1 - distance) * 100, 2)
+    live_embedding_obj = DeepFace.represent(img_path=np.frombuffer(img_bytes, np.uint8), model_name="Facenet", enforce_detection=True)
+    live_embedding = np.array(live_embedding_obj[0]["embedding"])
+    
+    distance = np.linalg.norm(stored_embedding - live_embedding)
+    accuracy_percentage = round(max(0, (1 - distance / 20)) * 100, 2)
     result = "PASS" if accuracy_percentage >= 60 else "FAIL"
 
     # Log the verification
