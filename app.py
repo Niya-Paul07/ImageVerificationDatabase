@@ -85,19 +85,7 @@ def logout():
     session.pop("admin", None)
     return jsonify({"message": "Logged out"})
 
-@app.route("/setup")
-def setup():
-    conn = get_db()
-    password = bcrypt.hashpw("admin123".encode(), bcrypt.gensalt())
-    try:
-        conn.execute("INSERT OR IGNORE INTO admins (username, password_hash, full_name) VALUES (?, ?, ?)",
-                     ("admin", password, "Admin User"))
-        conn.commit()
-        return "Admin account created successfully!"
-    except Exception as e:
-        return f"Error: {str(e)}"
-    finally:
-        conn.close()
+
 
 # ── Admin Login ──────────────────────────────────────────
 @app.route("/admin/login", methods=["POST"])
