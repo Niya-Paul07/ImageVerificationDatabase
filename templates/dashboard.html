@@ -385,7 +385,7 @@
 
   async function loadDashboard() {
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/dashboard', { credentials: 'include' });
+      const res = await fetch('/api/dashboard', { credentials: 'include' });
       const data = await res.json();
 
       if (data.error) { window.location.href = '/'; return; }
@@ -477,7 +477,7 @@
   }
 
   async function handleLogout() {
-    await fetch('http://127.0.0.1:5000/admin/logout', { method: 'POST', credentials: 'include' });
+   await fetch('/admin/logout', { method: 'POST', credentials: 'include' });
     window.location.href = '/';
   }
 
