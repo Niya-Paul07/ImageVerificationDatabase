@@ -1,7 +1,8 @@
 from flask import Flask, request, jsonify, session
 import sqlite3
 import bcrypt
-from deepface import DeepFace
+from sklearn.metrics.pairwise import cosine_similarity
+import cv2
 import numpy as np
 import json
 import io
@@ -105,10 +106,12 @@ def register_student():
 
     img_bytes = photo.read()
     try:
-        embedding_obj = DeepFace.represent(img_path=np.frombuffer(img_bytes, np.uint8), model_name="Facenet", enforce_detection=True)
-        embedding = json.dumps(embedding_obj[0]["embedding"])
+        nparr = np.frombuffer(img_bytes, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_GRAYSCALE)
+        img_resized = cv2.resize(img, (100, 100))
+        embedding = json.dumps(img_resized.flatten().tolist())
     except Exception as e:
-        return jsonify({"error": "No face detected in photo. Please upload a clear front-facing photo."}), 400
+        return jsonify({"error": "Could not process photo."}), 400
 
     conn = get_db()
     try:
@@ -144,12 +147,13 @@ def verify_student():
     img_bytes = photo.read()
 
 
-    stored_embedding = np.array(json.loads(student["face_embedding"]))
-    live_embedding_obj = DeepFace.represent(img_path=np.frombuffer(img_bytes, np.uint8), model_name="Facenet", enforce_detection=True)
-    live_embedding = np.array(live_embedding_obj[0]["embedding"])
-    
-    distance = np.linalg.norm(stored_embedding - live_embedding)
-    accuracy_percentage = round(max(0, (1 - distance / 20)) * 100, 2)
+    stored_embedding = np.array(json.loads(student["face_embedding"])).reshape(1, -1)
+    nparr = np.frombuffer(img_bytes, np.uint8)
+    live_img = cv2.imdecode(nparr, cv2.IMREAD_GRAYSCALE)
+    live_img_resized = cv2.resize(live_img, (100, 100))
+    live_embedding = live_img_resized.flatten().reshape(1, -1)
+    similarity = cosine_similarity(stored_embedding, live_embedding)[0][0]
+    accuracy_percentage = round(similarity * 100, 2)
     result = "PASS" if accuracy_percentage >= 60 else "FAIL"
 
     # Log the verification
