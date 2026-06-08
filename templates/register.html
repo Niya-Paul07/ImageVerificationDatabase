@@ -349,7 +349,7 @@
     btn.disabled = true;
 
     try {
-      const res = await fetch('http://127.0.0.1:5000/student/register', {
+      const res = await fetch('/student/register', {
         method: 'POST',
         body: formData,
         credentials: 'include'

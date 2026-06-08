@@ -1,23 +1,73 @@
-from flask import Flask, request, jsonify, session
-import sqlite3
+from flask import Flask, request, jsonify, session, render_template, redirect, url_for
+import os
+import psycopg2
+import psycopg2.extras
 import bcrypt
-from deepface import DeepFace
+from sklearn.metrics.pairwise import cosine_similarity
+import cv2
 import numpy as np
 import json
 import io
 from PIL import Image
-from flask import render_template
+from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = "cdit_secret_key"
+app.secret_key = os.environ.get("SECRET_KEY", "cdit_secret_key")
 
 def get_db():
-    conn = sqlite3.connect("exam_registration.db")
-    conn.row_factory = sqlite3.Row
+    conn = psycopg2.connect(os.environ.get("DATABASE_URL"), cursor_factory=psycopg2.extras.RealDictCursor)
     return conn
 
-from functools import wraps
-from flask import redirect, url_for
+def init_db():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS admins (
+            id SERIAL PRIMARY KEY,
+            username VARCHAR(100) UNIQUE NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
+            full_name VARCHAR(200),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS students (
+            id SERIAL PRIMARY KEY,
+            student_id VARCHAR(50) UNIQUE NOT NULL,
+            full_name VARCHAR(200) NOT NULL,
+            dob DATE NOT NULL,
+            department VARCHAR(100),
+            email VARCHAR(200) UNIQUE,
+            phone VARCHAR(20),
+            photo BYTEA,
+            face_embedding TEXT,
+            registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS verification_logs (
+            id SERIAL PRIMARY KEY,
+            student_id VARCHAR(50) NOT NULL,
+            verified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            result VARCHAR(10) NOT NULL,
+            accuracy_percentage FLOAT,
+            captured_photo BYTEA,
+            verified_by VARCHAR(100)
+        )
+    """)
+    # Create default admin if not exists
+    password = bcrypt.hashpw("admin123".encode(), bcrypt.gensalt()).decode()
+    cursor.execute("""
+        INSERT INTO admins (username, password_hash, full_name)
+        VALUES (%s, %s, %s)
+        ON CONFLICT (username) DO NOTHING
+    """, ("admin", password, "Admin User"))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+with app.app_context():
+    init_db()
 
 def login_required(f):
     @wraps(f)
@@ -47,33 +97,7 @@ def verify_page():
 def dashboard():
     return render_template("dashboard.html")
 
-@app.route("/api/dashboard")
-@login_required
-def api_dashboard():
-    conn = get_db()
-    total_students = conn.execute("SELECT COUNT(*) FROM students").fetchone()[0]
-    total_verifications = conn.execute("SELECT COUNT(*) FROM verification_logs").fetchone()[0]
-    total_pass = conn.execute("SELECT COUNT(*) FROM verification_logs WHERE result='PASS'").fetchone()[0]
-    total_fail = conn.execute("SELECT COUNT(*) FROM verification_logs WHERE result='FAIL'").fetchone()[0]
-    students = conn.execute("SELECT student_id, full_name, department, email, registered_at FROM students ORDER BY registered_at DESC").fetchall()
-    recent_verifications = conn.execute("SELECT student_id, result, accuracy_percentage, verified_by, verified_at FROM verification_logs ORDER BY verified_at DESC LIMIT 20").fetchall()
-    conn.close()
-
-    return jsonify({
-        "total_students": total_students,
-        "total_verifications": total_verifications,
-        "total_pass": total_pass,
-        "total_fail": total_fail,
-        "students": [dict(s) for s in students],
-        "recent_verifications": [dict(v) for v in recent_verifications]
-    })
-
-@app.route("/admin/logout", methods=["POST"])
-def logout():
-    session.pop("admin", None)
-    return jsonify({"message": "Logged out"})
-
-# ── Admin Login ──────────────────────────────────────────
+# ── Admin Login ───────────────────────────────────────────
 @app.route("/admin/login", methods=["POST"])
 def admin_login():
     data = request.json
@@ -81,16 +105,26 @@ def admin_login():
     password = data.get("password")
 
     conn = get_db()
-    admin = conn.execute("SELECT * FROM admins WHERE username = ?", (username,)).fetchone()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM admins WHERE username = %s", (username,))
+    admin = cursor.fetchone()
+    cursor.close()
     conn.close()
 
-    if admin and bcrypt.checkpw(password.encode(), admin["password_hash"]):
+    if admin and bcrypt.checkpw(password.encode(), admin["password_hash"].encode()):
         session["admin"] = username
         return jsonify({"message": "Login successful"})
     return jsonify({"error": "Invalid credentials"}), 401
 
+# ── Admin Logout ──────────────────────────────────────────
+@app.route("/admin/logout", methods=["POST"])
+def logout():
+    session.pop("admin", None)
+    return jsonify({"message": "Logged out"})
+
 # ── Student Registration ──────────────────────────────────
 @app.route("/student/register", methods=["POST"])
+@login_required
 def register_student():
     student_id = request.form.get("student_id")
     full_name = request.form.get("full_name")
@@ -105,26 +139,32 @@ def register_student():
 
     img_bytes = photo.read()
     try:
-        embedding_obj = DeepFace.represent(img_path=np.frombuffer(img_bytes, np.uint8), model_name="Facenet", enforce_detection=True)
-        embedding = json.dumps(embedding_obj[0]["embedding"])
+        nparr = np.frombuffer(img_bytes, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_GRAYSCALE)
+        img_resized = cv2.resize(img, (100, 100))
+        embedding = json.dumps(img_resized.flatten().tolist())
     except Exception as e:
-        return jsonify({"error": "No face detected in photo. Please upload a clear front-facing photo."}), 400
+        return jsonify({"error": "Could not process photo."}), 400
 
     conn = get_db()
+    cursor = conn.cursor()
     try:
-        conn.execute("""
+        cursor.execute("""
             INSERT INTO students (student_id, full_name, dob, department, email, phone, photo, face_embedding)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (student_id, full_name, dob, department, email, phone, img_bytes, embedding))
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (student_id, full_name, dob, department, email, phone, psycopg2.Binary(img_bytes), embedding))
         conn.commit()
         return jsonify({"message": "Student registered successfully"})
-    except sqlite3.IntegrityError:
+    except psycopg2.errors.UniqueViolation:
+        conn.rollback()
         return jsonify({"error": "Student ID or email already exists"}), 409
     finally:
+        cursor.close()
         conn.close()
 
 # ── Face Verification ─────────────────────────────────────
 @app.route("/verify", methods=["POST"])
+@login_required
 def verify_student():
     student_id = request.form.get("student_id")
     photo = request.files.get("photo")
@@ -134,36 +174,68 @@ def verify_student():
         return jsonify({"error": "Missing student ID or photo"}), 400
 
     conn = get_db()
-    student = conn.execute("SELECT * FROM students WHERE student_id = ?", (student_id,)).fetchone()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM students WHERE student_id = %s", (student_id,))
+    student = cursor.fetchone()
 
     if not student:
+        cursor.close()
         conn.close()
         return jsonify({"error": "Student not found"}), 404
 
-    # Load live photo and extract embedding
     img_bytes = photo.read()
 
-
-    stored_embedding = np.array(json.loads(student["face_embedding"]))
-    live_embedding_obj = DeepFace.represent(img_path=np.frombuffer(img_bytes, np.uint8), model_name="Facenet", enforce_detection=True)
-    live_embedding = np.array(live_embedding_obj[0]["embedding"])
-    
-    distance = np.linalg.norm(stored_embedding - live_embedding)
-    accuracy_percentage = round(max(0, (1 - distance / 20)) * 100, 2)
+    stored_embedding = np.array(json.loads(student["face_embedding"])).reshape(1, -1)
+    nparr = np.frombuffer(img_bytes, np.uint8)
+    live_img = cv2.imdecode(nparr, cv2.IMREAD_GRAYSCALE)
+    live_img_resized = cv2.resize(live_img, (100, 100))
+    live_embedding = live_img_resized.flatten().reshape(1, -1)
+    similarity = cosine_similarity(stored_embedding, live_embedding)[0][0]
+    accuracy_percentage = round(float(similarity) * 100, 2)
     result = "PASS" if accuracy_percentage >= 60 else "FAIL"
 
-    # Log the verification
-    conn.execute("""
+    cursor.execute("""
         INSERT INTO verification_logs (student_id, result, accuracy_percentage, captured_photo, verified_by)
-        VALUES (?, ?, ?, ?, ?)
-    """, (student_id, result, accuracy_percentage, img_bytes, verified_by))
+        VALUES (%s, %s, %s, %s, %s)
+    """, (student_id, result, accuracy_percentage, psycopg2.Binary(img_bytes), verified_by))
     conn.commit()
+    cursor.close()
     conn.close()
 
     return jsonify({
         "student_id": student_id,
         "result": result,
         "accuracy_percentage": accuracy_percentage
+    })
+
+# ── Dashboard API ─────────────────────────────────────────
+@app.route("/api/dashboard")
+@login_required
+def api_dashboard():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) as count FROM students")
+    total_students = cursor.fetchone()["count"]
+    cursor.execute("SELECT COUNT(*) as count FROM verification_logs")
+    total_verifications = cursor.fetchone()["count"]
+    cursor.execute("SELECT COUNT(*) as count FROM verification_logs WHERE result='PASS'")
+    total_pass = cursor.fetchone()["count"]
+    cursor.execute("SELECT COUNT(*) as count FROM verification_logs WHERE result='FAIL'")
+    total_fail = cursor.fetchone()["count"]
+    cursor.execute("SELECT student_id, full_name, department, email, registered_at FROM students ORDER BY registered_at DESC")
+    students = cursor.fetchall()
+    cursor.execute("SELECT student_id, result, accuracy_percentage, verified_by, verified_at FROM verification_logs ORDER BY verified_at DESC LIMIT 20")
+    recent_verifications = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return jsonify({
+        "total_students": total_students,
+        "total_verifications": total_verifications,
+        "total_pass": total_pass,
+        "total_fail": total_fail,
+        "students": [dict(s) for s in students],
+        "recent_verifications": [dict(v) for v in recent_verifications]
     })
 
 if __name__ == "__main__":

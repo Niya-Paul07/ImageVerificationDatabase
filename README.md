@@ -42,7 +42,7 @@ The Exam Registration Platform allows administrators to register exam candidates
 ## Tech Stack
 
 | Layer     | Technology                      |
-|-----------|---------------------------------|        
+|--------------------------------------------|        
 | Frontend  | HTML / CSS / JavaScript         |
 | Backend   | Python                          |
 | Database  | SQLite (`exam_registration.db`) |
