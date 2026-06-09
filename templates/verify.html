@@ -305,6 +305,7 @@
   </div>
 
   <a href="/register" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to registration</a>
+  <a href="/dashboard" class="back-link" style="margin-left: 1rem;"><i class="fa-solid fa-gauge"></i> Dashboard</a>
 
   <!-- Result display -->
   <div class="result-card" id="resultCard">
@@ -542,6 +543,19 @@
         document.getElementById('resultStudent').textContent = `Student ID: ${data.student_id}`;
         resultCard.style.display = 'block';
         resultCard.scrollIntoView({ behavior: 'smooth' });
+        // Auto-reset after 5 seconds
+setTimeout(() => {
+    resultCard.style.display = 'none';
+    document.getElementById('student_id').value = '';
+    capturedBlob = null;
+    document.getElementById('capturedImg').style.display = 'none';
+    document.getElementById('btnCapture').style.display = 'flex';
+    document.getElementById('btnRetake').style.display = 'none';
+    document.getElementById('btnStart').style.display = 'flex';
+    document.getElementById('btnCapture').disabled = true;
+    clearPhoto({ stopPropagation: () => {} });
+}, 5000);
+        
       } else {
         errText.textContent = data.error || 'Verification failed.';
         errMsg.style.display = 'flex';
