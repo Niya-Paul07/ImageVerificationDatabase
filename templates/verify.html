@@ -313,7 +313,17 @@
     <div class="result-label" id="resultLabel">PASS</div>
     <div class="result-accuracy" id="resultAccuracy">Accuracy: 94.5%</div>
     <div class="result-student" id="resultStudent"></div>
-  </div>
+    <div style="display:flex; gap:1.5rem; justify-content:center; margin-top:1rem; flex-wrap:wrap;">
+        <div style="text-align:center;">
+            <div style="font-size:12px; color:#888; margin-bottom:6px;">Registered photo</div>
+            <img id="registeredPhotoEl" src="" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid #185FA5;" />
+        </div>
+        <div style="text-align:center;">
+            <div style="font-size:12px; color:#888; margin-bottom:6px;">Captured photo</div>
+            <img id="capturedPhotoEl" src="" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid #185FA5;" />
+        </div>
+    </div>
+</div>
 
   <!-- Error -->
   <div id="errMsg" class="msg error">
@@ -542,6 +552,8 @@
         document.getElementById('resultAccuracy').textContent = `Accuracy: ${data.accuracy_percentage}%`;
         document.getElementById('resultStudent').textContent = `Student ID: ${data.student_id}`;
         resultCard.style.display = 'block';
+        document.getElementById('registeredPhotoEl').src = 'data:image/jpeg;base64,' + data.registered_photo;
+        document.getElementById('capturedPhotoEl').src = 'data:image/jpeg;base64,' + data.captured_photo;
         resultCard.scrollIntoView({ behavior: 'smooth' });
         // Auto-reset after 5 seconds
 setTimeout(() => {

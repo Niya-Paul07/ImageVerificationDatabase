@@ -202,10 +202,16 @@ def verify_student():
     cursor.close()
     conn.close()
 
+    import base64
+    registered_photo_b64 = base64.b64encode(bytes(student["photo"])).decode("utf-8")
+    captured_photo_b64 = base64.b64encode(img_bytes).decode("utf-8")
+
     return jsonify({
         "student_id": student_id,
         "result": result,
-        "accuracy_percentage": accuracy_percentage
+        "accuracy_percentage": accuracy_percentage,
+        "registered_photo": registered_photo_b64,
+        "captured_photo": captured_photo_b64
     })
 
 # ── Dashboard API ─────────────────────────────────────────
