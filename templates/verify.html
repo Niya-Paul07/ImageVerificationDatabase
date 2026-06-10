@@ -7,293 +7,135 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f0f4f8;
-      min-height: 100vh;
-      padding: 2rem;
-    }
-
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; padding: 2rem; }
     .page-wrap { max-width: 680px; margin: 0 auto; }
 
-    .page-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 2rem;
-    }
-
-    .brand-icon {
-      width: 44px; height: 44px;
-      border-radius: 10px;
-      background: #042C53;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-
+    .page-header { display: flex; align-items: center; gap: 12px; margin-bottom: 2rem; }
+    .brand-icon { width: 44px; height: 44px; border-radius: 10px; background: #042C53;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .brand-icon i { color: #B5D4F4; font-size: 20px; }
     .brand-name { font-size: 15px; font-weight: 600; color: #1a1a2e; line-height: 1.3; }
-    .brand-sub { font-size: 12px; color: #888; }
+    .brand-sub  { font-size: 12px; color: #888; }
 
-    .card {
-      background: #fff;
-      border-radius: 14px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-      padding: 2rem;
-      margin-bottom: 1.5rem;
-    }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px;
+      color: #185FA5; text-decoration: none; margin-bottom: 1.5rem; }
+    .back-link:hover { text-decoration: underline; }
 
-    .card-title {
-      font-size: 16px; font-weight: 600; color: #1a1a2e;
-      margin-bottom: 1.25rem;
-      display: flex; align-items: center; gap: 8px;
-    }
+    /* Countdown banner */
+    .countdown-banner { display: none; align-items: center; gap: 10px; font-size: 13px;
+      border-radius: 8px; padding: 10px 14px; margin-bottom: 1rem; font-weight: 500; }
+    .countdown-banner.pass { color: #3B6D11; background: #EAF3DE; border: 1px solid #C0DD97; }
+    .countdown-banner.fail { color: #a32d2d; background: #fcebeb; border: 1px solid #f7c1c1; }
+    .countdown-banner.show { display: flex; }
+    .countdown-ring { margin-left: auto; width: 36px; height: 36px; position: relative; flex-shrink: 0; }
+    .countdown-ring svg { transform: rotate(-90deg); }
+    .ring-bg   { fill: none; stroke: rgba(0,0,0,0.1); stroke-width: 3; }
+    .ring-fill { fill: none; stroke-width: 3; stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear; }
+    .pass .ring-fill { stroke: #3B6D11; }
+    .fail .ring-fill { stroke: #a32d2d; }
+    .ring-num { position: absolute; inset: 0; display: flex; align-items: center;
+      justify-content: center; font-size: 12px; font-weight: 700; }
 
+    .card { background: #fff; border-radius: 14px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08); padding: 2rem; margin-bottom: 1.5rem; }
+    .card-title { font-size: 16px; font-weight: 600; color: #1a1a2e;
+      margin-bottom: 1.25rem; display: flex; align-items: center; gap: 8px; }
     .card-title i { color: #185FA5; font-size: 18px; }
-
     .field { margin-bottom: 1rem; }
     .field label { display: block; font-size: 13px; color: #555; margin-bottom: 6px; font-weight: 500; }
-
-    .field input {
-      width: 100%;
-      padding: 10px 14px;
-      border: 1px solid #dde1e7;
-      border-radius: 8px;
-      font-size: 14px;
-      color: #1a1a2e;
-      background: #fafafa;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      outline: none;
-    }
-
-    .field input:focus {
-      border-color: #185FA5;
-      box-shadow: 0 0 0 3px rgba(24,95,165,0.1);
-      background: #fff;
-    }
-
+    .field input { width: 100%; padding: 10px 14px; border: 1px solid #dde1e7;
+      border-radius: 8px; font-size: 14px; color: #1a1a2e; background: #fafafa;
+      transition: border-color 0.2s, box-shadow 0.2s; outline: none; }
+    .field input:focus { border-color: #185FA5; box-shadow: 0 0 0 3px rgba(24,95,165,0.1); background: #fff; }
     .required { color: #a32d2d; margin-left: 2px; }
 
-    /* Capture tabs */
-    .tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 1.25rem;
-    }
+    .tabs { display: flex; gap: 8px; margin-bottom: 1.25rem; }
+    .tab-btn { flex: 1; padding: 9px; font-size: 13px; font-weight: 500;
+      border: 1px solid #dde1e7; border-radius: 8px; background: #fafafa; color: #555;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      gap: 6px; transition: all 0.15s; }
+    .tab-btn.active { background: #042C53; color: #B5D4F4; border-color: #042C53; }
 
-    .tab-btn {
-      flex: 1;
-      padding: 9px;
-      font-size: 13px;
-      font-weight: 500;
-      border: 1px solid #dde1e7;
-      border-radius: 8px;
-      background: #fafafa;
-      color: #555;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: all 0.15s;
-    }
-
-    .tab-btn.active {
-      background: #042C53;
-      color: #B5D4F4;
-      border-color: #042C53;
-    }
-
-    /* Webcam */
-    .webcam-wrap {
-      position: relative;
-      background: #1a1a2e;
-      border-radius: 10px;
-      overflow: hidden;
-      aspect-ratio: 4/3;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #webcamVideo {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: none;
-    }
-
-    .webcam-placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      color: #aaa;
-    }
-
+    .webcam-wrap { position: relative; background: #1a1a2e; border-radius: 10px;
+      overflow: hidden; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; }
+    #webcamVideo { width: 100%; height: 100%; object-fit: cover; display: none; }
+    .webcam-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: #aaa; }
     .webcam-placeholder i { font-size: 40px; }
     .webcam-placeholder span { font-size: 13px; }
-
     #canvasEl { display: none; }
-
-    .webcam-controls {
-      display: flex;
-      gap: 8px;
-      margin-top: 0.75rem;
-    }
-
-    .cam-btn {
-      flex: 1;
-      padding: 10px;
-      font-size: 13px;
-      font-weight: 500;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: opacity 0.15s;
-    }
-
+    #capturedImg { display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+    .webcam-controls { display: flex; gap: 8px; margin-top: 0.75rem; }
+    .cam-btn { flex: 1; padding: 10px; font-size: 13px; font-weight: 500; border-radius: 8px;
+      border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      gap: 6px; transition: opacity 0.15s; }
     .cam-btn:hover { opacity: 0.85; }
-    .cam-btn.start { background: #185FA5; color: #fff; }
+    .cam-btn.start   { background: #185FA5; color: #fff; }
     .cam-btn.capture { background: #042C53; color: #B5D4F4; }
-    .cam-btn.retake { background: #f0f4f8; color: #555; border: 1px solid #dde1e7; }
+    .cam-btn.retake  { background: #f0f4f8; color: #555; border: 1px solid #dde1e7; }
     .cam-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    /* Upload area */
-    .photo-upload-area {
-      border: 2px dashed #dde1e7;
-      border-radius: 10px;
-      padding: 2rem;
-      text-align: center;
-      cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
-      position: relative;
-    }
-
+    .photo-upload-area { border: 2px dashed #dde1e7; border-radius: 10px; padding: 2rem;
+      text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; position: relative; }
     .photo-upload-area:hover { border-color: #185FA5; background: #f5f9ff; }
-
-    .photo-upload-area input[type="file"] {
-      position: absolute; inset: 0;
-      opacity: 0; cursor: pointer;
-      width: 100%; height: 100%;
-    }
-
+    .photo-upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
     .upload-icon { font-size: 32px; color: #aaa; margin-bottom: 0.5rem; }
-    .upload-text { font-size: 14px; color: #555; }
-    .upload-hint { font-size: 12px; color: #aaa; margin-top: 4px; }
+    .upload-text  { font-size: 14px; color: #555; }
+    .upload-hint  { font-size: 12px; color: #aaa; margin-top: 4px; }
+    .photo-preview { display: none; flex-direction: column; align-items: center; gap: 0.75rem; }
+    .photo-preview img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #185FA5; }
+    .photo-preview button { font-size: 12px; color: #a32d2d; background: none; border: none; cursor: pointer; text-decoration: underline; }
 
-    .photo-preview {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .photo-preview img {
-      width: 120px; height: 120px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 3px solid #185FA5;
-    }
-
-    .photo-preview button {
-      font-size: 12px; color: #a32d2d;
-      background: none; border: none;
-      cursor: pointer; text-decoration: underline;
-    }
-
-    /* Messages */
-    .msg {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      border-radius: 8px;
-      padding: 10px 14px;
-      margin-bottom: 1rem;
-    }
-
+    .msg { display: none; align-items: center; gap: 8px; font-size: 13px;
+      border-radius: 8px; padding: 10px 14px; margin-bottom: 1rem; }
     .msg.error { color: #a32d2d; background: #fcebeb; border: 1px solid #f7c1c1; }
 
     /* Result card */
-    .result-card {
-      display: none;
-      border-radius: 12px;
-      padding: 1.5rem;
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
-
-    .result-card.pass {
-      background: #EAF3DE;
-      border: 2px solid #C0DD97;
-    }
-
-    .result-card.fail {
-      background: #fcebeb;
-      border: 2px solid #f7c1c1;
-    }
-
-    .result-icon { font-size: 48px; margin-bottom: 0.5rem; }
-    .result-card.pass .result-icon { color: #3B6D11; }
-    .result-card.fail .result-icon { color: #a32d2d; }
-
-    .result-label {
-      font-size: 28px;
-      font-weight: 700;
-      margin-bottom: 0.25rem;
-    }
-
+    .result-card { display: none; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .result-card.pass { background: #EAF3DE; border: 2px solid #C0DD97; }
+    .result-card.fail { background: #fcebeb;  border: 2px solid #f7c1c1; }
+    .result-top { display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1.25rem; }
+    .result-icon-wrap { font-size: 48px; flex-shrink: 0; }
+    .result-card.pass .result-icon-wrap { color: #3B6D11; }
+    .result-card.fail .result-icon-wrap { color: #a32d2d; }
+    .result-label { font-size: 28px; font-weight: 700; }
     .result-card.pass .result-label { color: #3B6D11; }
     .result-card.fail .result-label { color: #a32d2d; }
-
     .result-accuracy { font-size: 14px; color: #555; }
-    .result-student { font-size: 13px; color: #888; margin-top: 4px; }
+    .result-student  { font-size: 13px; color: #888; margin-top: 4px; }
 
-    /* Submit button */
-    .submit-btn {
-      width: 100%;
-      padding: 12px;
-      font-size: 15px;
-      font-weight: 600;
-      background: #042C53;
-      color: #B5D4F4;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: opacity 0.15s;
-    }
+    /* Photo comparison — always shown after verify */
+    .photo-comparison { display: flex; gap: 1rem; margin-top: 1rem; }
+    .photo-box { flex: 1; background: rgba(255,255,255,0.65); border-radius: 10px; padding: 0.75rem; text-align: center; }
+    .photo-box-label { font-size: 11px; font-weight: 600; color: #555;
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
+    .photo-box img { width: 100%; max-height: 160px; object-fit: cover;
+      border-radius: 8px; border: 2px solid rgba(255,255,255,0.9); display: block; }
+    .photo-spinner { height: 110px; display: flex; align-items: center; justify-content: center;
+      color: #aaa; font-size: 12px; flex-direction: column; gap: 6px; }
+    .photo-spinner i { font-size: 24px; }
 
-    .submit-btn:hover { opacity: 0.88; }
+    /* Skip button */
+    .skip-btn { display: none; width: 100%; margin-top: 1rem; padding: 10px; font-size: 13px;
+      font-weight: 600; background: transparent; border: 1.5px solid currentColor;
+      border-radius: 8px; cursor: pointer; align-items: center; justify-content: center;
+      gap: 6px; transition: opacity 0.15s; }
+    .result-card.pass .skip-btn { color: #3B6D11; }
+    .result-card.fail .skip-btn { color: #a32d2d; }
+    .skip-btn:hover { opacity: 0.7; }
+    .skip-btn.show { display: flex; }
+
+    .submit-btn { width: 100%; padding: 12px; font-size: 15px; font-weight: 600;
+      background: #042C53; color: #B5D4F4; border: none; border-radius: 8px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.15s; }
+    .submit-btn:hover  { opacity: 0.88; }
     .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 13px;
-      color: #185FA5;
-      text-decoration: none;
-      margin-bottom: 1.5rem;
-    }
-
-    .back-link:hover { text-decoration: underline; }
 
     .panel { display: none; }
     .panel.active { display: block; }
   </style>
 </head>
 <body>
-
 <div class="page-wrap">
 
   <div class="page-header">
@@ -304,20 +146,61 @@
     </div>
   </div>
 
-  <a href="/register" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to registration</a>
+  <a href="/dashboard" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to dashboard</a>
 
-  <!-- Result display -->
-  <div class="result-card" id="resultCard">
-    <div class="result-icon"><i id="resultIcon" class="fa-solid fa-circle-check"></i></div>
-    <div class="result-label" id="resultLabel">PASS</div>
-    <div class="result-accuracy" id="resultAccuracy">Accuracy: 94.5%</div>
-    <div class="result-student" id="resultStudent"></div>
+  <!-- Countdown banner (shown after verify) -->
+  <div class="countdown-banner" id="countdownBanner">
+    <i class="fa-solid fa-clock"></i>
+    <span id="bannerText">Moving to next candidate…</span>
+    <div class="countdown-ring">
+      <svg viewBox="0 0 36 36" width="36" height="36">
+        <circle class="ring-bg"   cx="18" cy="18" r="15.9"/>
+        <circle class="ring-fill" id="ringFill" cx="18" cy="18" r="15.9"
+          stroke-dasharray="100 100" stroke-dashoffset="0"/>
+      </svg>
+      <div class="ring-num" id="ringNum">5</div>
+    </div>
   </div>
 
   <!-- Error -->
   <div id="errMsg" class="msg error">
     <i class="fa-solid fa-circle-exclamation"></i>
     <span id="errText">Something went wrong.</span>
+  </div>
+
+  <!-- Result card -->
+  <div class="result-card" id="resultCard">
+    <div class="result-top">
+      <div class="result-icon-wrap"><i id="resultIcon" class="fa-solid fa-circle-check"></i></div>
+      <div>
+        <div class="result-label"    id="resultLabel">PASS</div>
+        <div class="result-accuracy" id="resultAccuracy">Accuracy: —</div>
+        <div class="result-student"  id="resultStudent"></div>
+      </div>
+    </div>
+
+    <!-- Both photos always shown -->
+    <div class="photo-comparison">
+      <div class="photo-box">
+        <div class="photo-box-label"><i class="fa-solid fa-database"></i> Registered photo</div>
+        <div class="photo-spinner" id="regSpinner">
+          <i class="fa-solid fa-spinner fa-spin"></i><span>Loading…</span>
+        </div>
+        <img id="registeredPhotoEl" src="" alt="Registered" style="display:none;" />
+      </div>
+      <div class="photo-box">
+        <div class="photo-box-label"><i class="fa-solid fa-camera"></i> Captured / Uploaded</div>
+        <div class="photo-spinner" id="liveSpinner" style="display:none;">
+          <i class="fa-solid fa-image-slash"></i><span>Not available</span>
+        </div>
+        <img id="livePhotoEl" src="" alt="Captured" style="display:none;" />
+      </div>
+    </div>
+
+    <!-- Skip countdown button -->
+    <button class="skip-btn" id="skipBtn" onclick="goNext()">
+      <i class="fa-solid fa-forward"></i> Skip — next candidate now
+    </button>
   </div>
 
   <!-- Student ID -->
@@ -336,7 +219,6 @@
   <!-- Photo capture -->
   <div class="card">
     <div class="card-title"><i class="fa-solid fa-camera"></i> Capture photo <span class="required">*</span></div>
-
     <div class="tabs">
       <button class="tab-btn active" id="tabWebcam" onclick="switchTab('webcam')">
         <i class="fa-solid fa-video"></i> Use webcam
@@ -346,33 +228,30 @@
       </button>
     </div>
 
-    <!-- Webcam panel -->
     <div class="panel active" id="panelWebcam">
       <div class="webcam-wrap">
         <video id="webcamVideo" autoplay playsinline></video>
         <canvas id="canvasEl"></canvas>
         <div class="webcam-placeholder" id="webcamPlaceholder">
-          <i class="fa-solid fa-camera-slash"></i>
-          <span>Camera not started</span>
+          <i class="fa-solid fa-camera-slash"></i><span>Camera not started</span>
         </div>
-        <img id="capturedImg" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:10px;" alt="Captured" />
+        <img id="capturedImg" alt="Captured" />
       </div>
       <div class="webcam-controls">
-        <button class="cam-btn start" id="btnStart" onclick="startCamera()">
+        <button class="cam-btn start"   id="btnStart"   onclick="startCamera()">
           <i class="fa-solid fa-video"></i> Start camera
         </button>
         <button class="cam-btn capture" id="btnCapture" onclick="capturePhoto()" disabled>
           <i class="fa-solid fa-camera"></i> Capture
         </button>
-        <button class="cam-btn retake" id="btnRetake" onclick="retakePhoto()" style="display:none;">
+        <button class="cam-btn retake"  id="btnRetake"  onclick="retakePhoto()" style="display:none;">
           <i class="fa-solid fa-rotate-left"></i> Retake
         </button>
       </div>
     </div>
 
-    <!-- Upload panel -->
     <div class="panel" id="panelUpload">
-      <div class="photo-upload-area" id="uploadArea">
+      <div class="photo-upload-area">
         <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoSelect(event)" />
         <div id="uploadPlaceholder">
           <div class="upload-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
@@ -388,7 +267,6 @@
     </div>
   </div>
 
-  <!-- Submit -->
   <div class="card">
     <button class="submit-btn" id="submitBtn" onclick="handleVerify()">
       <i class="fa-solid fa-face-smile"></i> Verify student
@@ -396,12 +274,17 @@
   </div>
 
 </div>
-
 <script>
-  let stream = null;
-  let capturedBlob = null;
-  let activeTab = 'webcam';
+  let stream        = null;
+  let capturedBlob  = null;
+  let capturedURL   = null;
+  let activeTab     = 'webcam';
+  let countdownTimer = null;
+  const PASS_SECS   = 15;
+  const FAIL_SECS   = 5;
+  const CIRCUMFERENCE = 100; // matches stroke-dasharray="100 100"
 
+  /* ── Tabs ── */
   function switchTab(tab) {
     activeTab = tab;
     document.getElementById('panelWebcam').classList.toggle('active', tab === 'webcam');
@@ -411,150 +294,238 @@
     if (tab === 'upload' && stream) stopCamera();
   }
 
+  /* ── Camera ── */
   async function startCamera() {
     try {
       stream = await navigator.mediaDevices.getUserMedia({ video: true });
       const video = document.getElementById('webcamVideo');
-      video.srcObject = stream;
+      video.srcObject     = stream;
       video.style.display = 'block';
       document.getElementById('webcamPlaceholder').style.display = 'none';
-      document.getElementById('btnCapture').disabled = false;
-      document.getElementById('btnStart').style.display = 'none';
-    } catch (err) {
-      alert('Could not access camera. Please allow camera permissions or use photo upload instead.');
-    }
+      document.getElementById('capturedImg').style.display       = 'none';
+      document.getElementById('btnCapture').disabled             = false;
+      document.getElementById('btnStart').style.display          = 'none';
+      document.getElementById('btnRetake').style.display         = 'none';
+      capturedBlob = null; capturedURL = null;
+    } catch { alert('Could not access camera. Please allow permissions or use photo upload.'); }
   }
 
   function capturePhoto() {
     const video = document.getElementById('webcamVideo');
     const canvas = document.getElementById('canvasEl');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
     canvas.getContext('2d').drawImage(video, 0, 0);
-
     canvas.toBlob(blob => {
       capturedBlob = blob;
-      const url = URL.createObjectURL(blob);
+      capturedURL  = URL.createObjectURL(blob);
       const img = document.getElementById('capturedImg');
-      img.src = url;
-      img.style.display = 'block';
-      video.style.display = 'none';
-      document.getElementById('btnCapture').style.display = 'none';
-      document.getElementById('btnRetake').style.display = 'flex';
+      img.src = capturedURL; img.style.display = 'block';
+      document.getElementById('webcamVideo').style.display  = 'none';
+      document.getElementById('btnCapture').style.display   = 'none';
+      document.getElementById('btnRetake').style.display    = 'flex';
       stopCamera();
     }, 'image/jpeg');
   }
 
   function retakePhoto() {
-    capturedBlob = null;
+    capturedBlob = null; capturedURL = null;
     document.getElementById('capturedImg').style.display = 'none';
-    document.getElementById('btnCapture').style.display = 'flex';
-    document.getElementById('btnRetake').style.display = 'none';
-    document.getElementById('btnStart').style.display = 'flex';
-    document.getElementById('btnCapture').disabled = true;
+    document.getElementById('btnCapture').style.display  = 'flex';
+    document.getElementById('btnRetake').style.display   = 'none';
+    document.getElementById('btnStart').style.display    = 'flex';
+    document.getElementById('btnCapture').disabled       = true;
   }
 
   function stopCamera() {
     if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
   }
 
+  /* ── Upload ── */
   function handlePhotoSelect(e) {
-    const file = e.target.files[0];
-    if (!file) return;
+    const file = e.target.files[0]; if (!file) return;
+    capturedURL = URL.createObjectURL(file);
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      document.getElementById('previewImg').src = ev.target.result;
-      document.getElementById('previewName').textContent = file.name;
+    reader.onload = ev => {
+      document.getElementById('previewImg').src               = ev.target.result;
+      document.getElementById('previewName').textContent      = file.name;
       document.getElementById('uploadPlaceholder').style.display = 'none';
-      document.getElementById('photoPreview').style.display = 'flex';
+      document.getElementById('photoPreview').style.display      = 'flex';
     };
     reader.readAsDataURL(file);
   }
 
   function clearPhoto(e) {
-    e.stopPropagation();
-    document.getElementById('photoInput').value = '';
+    e.stopPropagation(); capturedURL = null;
+    document.getElementById('photoInput').value                = '';
     document.getElementById('uploadPlaceholder').style.display = 'block';
-    document.getElementById('photoPreview').style.display = 'none';
+    document.getElementById('photoPreview').style.display      = 'none';
   }
 
-  async function handleVerify() {
-    const errMsg = document.getElementById('errMsg');
-    const errText = document.getElementById('errText');
-    const resultCard = document.getElementById('resultCard');
-    const btn = document.getElementById('submitBtn');
+  /* ── Countdown ring ── */
+  function startCountdown(totalSecs, isPass) {
+    clearCountdown();
+    let secs = totalSecs;
 
-    errMsg.style.display = 'none';
+    const banner   = document.getElementById('countdownBanner');
+    const ringFill = document.getElementById('ringFill');
+    const ringNum  = document.getElementById('ringNum');
+    const bannerText = document.getElementById('bannerText');
+
+    banner.className = 'countdown-banner ' + (isPass ? 'pass' : 'fail') + ' show';
+    bannerText.textContent = isPass
+      ? `Verified ✓ — moving to next candidate in ${totalSecs}s`
+      : `Verification failed — moving to next candidate in ${totalSecs}s`;
+    ringNum.textContent = secs;
+    ringFill.style.strokeDashoffset = '0';
+
+    countdownTimer = setInterval(() => {
+      secs--;
+      ringNum.textContent = secs;
+      const progress = ((totalSecs - secs) / totalSecs) * CIRCUMFERENCE;
+      ringFill.style.strokeDashoffset = progress;
+      if (secs <= 0) { clearCountdown(); goNext(); }
+    }, 1000);
+  }
+
+  function clearCountdown() {
+    if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+    document.getElementById('countdownBanner').classList.remove('show');
+  }
+
+  /* ── Go to next candidate ── */
+  function goNext() {
+    clearCountdown();
+    document.getElementById('resultCard').style.display = 'none';
+    document.getElementById('student_id').value         = '';
+    document.getElementById('student_id').focus();
+    resetCapture();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function resetCapture() {
+    capturedBlob = null; capturedURL = null; stopCamera();
+    document.getElementById('capturedImg').style.display       = 'none';
+    document.getElementById('webcamVideo').style.display       = 'none';
+    document.getElementById('webcamPlaceholder').style.display = 'flex';
+    document.getElementById('btnStart').style.display          = 'flex';
+    document.getElementById('btnCapture').style.display        = 'flex';
+    document.getElementById('btnCapture').disabled             = true;
+    document.getElementById('btnRetake').style.display         = 'none';
+    document.getElementById('photoInput').value                = '';
+    document.getElementById('uploadPlaceholder').style.display = 'block';
+    document.getElementById('photoPreview').style.display      = 'none';
+    if (activeTab === 'webcam') startCamera();
+  }
+
+  /* ── Verify ── */
+  async function handleVerify() {
+    clearCountdown();
+    const errMsg     = document.getElementById('errMsg');
+    const resultCard = document.getElementById('resultCard');
+    const btn        = document.getElementById('submitBtn');
+
+    errMsg.style.display    = 'none';
     resultCard.style.display = 'none';
 
-    const student_id = document.getElementById('student_id').value.trim();
+    const student_id  = document.getElementById('student_id').value.trim();
     const verified_by = document.getElementById('verified_by').value.trim();
 
     if (!student_id) {
-      errText.textContent = 'Please enter a student ID.';
-      errMsg.style.display = 'flex';
-      return;
+      document.getElementById('errText').textContent = 'Please enter a student ID.';
+      errMsg.style.display = 'flex'; return;
     }
 
     let photoBlob = null;
-
     if (activeTab === 'webcam') {
       if (!capturedBlob) {
-        errText.textContent = 'Please capture a photo using the webcam.';
-        errMsg.style.display = 'flex';
-        return;
+        document.getElementById('errText').textContent = 'Please capture a photo using the webcam.';
+        errMsg.style.display = 'flex'; return;
       }
       photoBlob = capturedBlob;
     } else {
       const file = document.getElementById('photoInput').files[0];
       if (!file) {
-        errText.textContent = 'Please upload a photo.';
-        errMsg.style.display = 'flex';
-        return;
+        document.getElementById('errText').textContent = 'Please upload a photo.';
+        errMsg.style.display = 'flex'; return;
       }
-      photoBlob = file;
+      photoBlob   = file;
+      capturedURL = URL.createObjectURL(file);
     }
 
     const formData = new FormData();
-    formData.append('student_id', student_id);
+    formData.append('student_id',  student_id);
     formData.append('verified_by', verified_by);
     formData.append('photo', photoBlob, 'capture.jpg');
 
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying…';
-    btn.disabled = true;
+    btn.disabled  = true;
 
     try {
-      const res = await fetch('/verify', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include'
-      });
+      const res  = await fetch('/verify', { method: 'POST', body: formData, credentials: 'include' });
       const data = await res.json();
 
       if (data.result) {
         const isPass = data.result === 'PASS';
+
+        // Result card header
         resultCard.className = 'result-card ' + (isPass ? 'pass' : 'fail');
-        document.getElementById('resultIcon').className = isPass
-          ? 'fa-solid fa-circle-check'
-          : 'fa-solid fa-circle-xmark';
-        document.getElementById('resultLabel').textContent = data.result;
+        document.getElementById('resultIcon').className       = isPass ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark';
+        document.getElementById('resultLabel').textContent    = data.result;
         document.getElementById('resultAccuracy').textContent = `Accuracy: ${data.accuracy_percentage}%`;
-        document.getElementById('resultStudent').textContent = `Student ID: ${data.student_id}`;
+        document.getElementById('resultStudent').textContent  = `Student ID: ${data.student_id}`;
+
+        // Uploaded / captured photo
+        const liveEl      = document.getElementById('livePhotoEl');
+        const liveSpinner = document.getElementById('liveSpinner');
+        if (capturedURL) {
+          liveEl.src             = capturedURL;
+          liveEl.style.display   = 'block';
+          liveSpinner.style.display = 'none';
+        } else {
+          liveEl.style.display      = 'none';
+          liveSpinner.style.display = 'flex';
+        }
+
+        // Registered photo — fetch from server
+        const regImg     = document.getElementById('registeredPhotoEl');
+        const regSpinner = document.getElementById('regSpinner');
+        regImg.style.display     = 'none';
+        regSpinner.style.display = 'flex';
+        regSpinner.innerHTML     = '<i class="fa-solid fa-spinner fa-spin"></i><span>Loading…</span>';
+
+        fetch(`/student/photo/${encodeURIComponent(student_id)}`, { credentials: 'include' })
+          .then(r => r.ok ? r.blob() : Promise.reject())
+          .then(blob => {
+            regImg.src               = URL.createObjectURL(blob);
+            regImg.style.display     = 'block';
+            regSpinner.style.display = 'none';
+          })
+          .catch(() => {
+            regSpinner.innerHTML = '<i class="fa-solid fa-image-slash"></i><span>Not available</span>';
+          });
+
+        // Show skip button
+        document.getElementById('skipBtn').classList.add('show');
+
         resultCard.style.display = 'block';
         resultCard.scrollIntoView({ behavior: 'smooth' });
+
+        // Start countdown — 15s PASS, 5s FAIL
+        startCountdown(isPass ? PASS_SECS : FAIL_SECS, isPass);
+
       } else {
-        errText.textContent = data.error || 'Verification failed.';
+        document.getElementById('errText').textContent = data.error || 'Verification failed.';
         errMsg.style.display = 'flex';
       }
+
     } catch {
-      errText.textContent = 'Could not connect to server. Is Flask running?';
+      document.getElementById('errText').textContent = 'Could not connect to server. Is Flask running?';
       errMsg.style.display = 'flex';
     }
 
     btn.innerHTML = '<i class="fa-solid fa-face-smile"></i> Verify student';
-    btn.disabled = false;
+    btn.disabled  = false;
   }
 </script>
-
 </body>
 </html>
