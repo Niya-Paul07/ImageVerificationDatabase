@@ -195,7 +195,7 @@ def verify_student():
         cursor.close()
         conn.close()
         error_msg = str(e)
-        if 'InvalidImageFormatException' in error_msg or 'no face' in error_msg.lower():
+        if 'InvalidImageFormat' in error_msg or 'InvalidParameter' in error_msg or 'no face' in error_msg.lower() or 'Face' in error_msg:
             return jsonify({"error": "No face detected in the captured photo. Please upload a clear front-facing photo."}), 400
         return jsonify({"error": f"Face comparison failed: {error_msg}"}), 500
 
