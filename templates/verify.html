@@ -166,6 +166,7 @@
             <img id="capturedPhotoEl" src="" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid #185FA5;" />
         </div>
     </div>
+<<<<<<< HEAD
 </div>
 =======
   <a href="/dashboard" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to dashboard</a>
@@ -184,6 +185,16 @@
     </div>
   </div>
 >>>>>>> 77d8c8b8be9d03e37dfe5f669e3e23c6e24df7e4
+=======
+    
+        <div id="nextCandidateWrap" style="display:none; margin-top:1rem;">
+            <button onclick="resetForNext()" style="padding:10px 24px; background:#042C53; color:#B5D4F4; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">
+                <i class="fa-solid fa-arrow-right"></i> Next candidate
+            </button>
+        </div>
+    </div>
+
+>>>>>>> 79d275c0e84f6918bf5930919a3d955a5b253310
 
   <!-- Error -->
   <div id="errMsg" class="msg error">
@@ -383,6 +394,20 @@
     document.getElementById('uploadPlaceholder').style.display = 'block';
     document.getElementById('photoPreview').style.display      = 'none';
   }
+  
+  function resetForNext() {
+    document.getElementById('resultCard').style.display = 'none';
+    document.getElementById('nextCandidateWrap').style.display = 'none';
+    document.getElementById('student_id').value = '';
+    capturedBlob = null;
+    document.getElementById('capturedImg').style.display = 'none';
+    document.getElementById('btnCapture').style.display = 'flex';
+    document.getElementById('btnRetake').style.display = 'none';
+    document.getElementById('btnStart').style.display = 'flex';
+    document.getElementById('btnCapture').disabled = true;
+    clearPhoto({ stopPropagation: () => {} });
+}
+
 
   /* ── Countdown ring ── */
   function startCountdown(totalSecs, isPass) {
@@ -495,6 +520,7 @@
         document.getElementById('resultIcon').className       = isPass ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark';
         document.getElementById('resultLabel').textContent    = data.result;
         document.getElementById('resultAccuracy').textContent = `Accuracy: ${data.accuracy_percentage}%`;
+<<<<<<< HEAD
         document.getElementById('resultStudent').textContent  = `Student ID: ${data.student_id}`;
 
         // Uploaded / captured photo
@@ -531,9 +557,17 @@
         document.getElementById('skipBtn').classList.add('show');
 
         resultCard.style.display = 'block';
+=======
+        document.getElementById('resultStudent').textContent = `Student ID: ${data.student_id}`;
+>>>>>>> 79d275c0e84f6918bf5930919a3d955a5b253310
         document.getElementById('registeredPhotoEl').src = 'data:image/jpeg;base64,' + data.registered_photo;
         document.getElementById('capturedPhotoEl').src = 'data:image/jpeg;base64,' + data.captured_photo;
+        resultCard.style.display = 'block';
+        if (isPass) {
+    document.getElementById('nextCandidateWrap').style.display = 'block';
+}
         resultCard.scrollIntoView({ behavior: 'smooth' });
+<<<<<<< HEAD
 <<<<<<< HEAD
         // Auto-reset after 5 seconds
 setTimeout(() => {
@@ -554,6 +588,22 @@ setTimeout(() => {
         startCountdown(isPass ? PASS_SECS : FAIL_SECS, isPass);
 
 >>>>>>> 77d8c8b8be9d03e37dfe5f669e3e23c6e24df7e4
+=======
+
+        if (!isPass) {
+          setTimeout(() => {
+            resultCard.style.display = 'none';
+            document.getElementById('student_id').value = '';
+            capturedBlob = null;
+            document.getElementById('capturedImg').style.display = 'none';
+            document.getElementById('btnCapture').style.display = 'flex';
+            document.getElementById('btnRetake').style.display = 'none';
+            document.getElementById('btnStart').style.display = 'flex';
+            document.getElementById('btnCapture').disabled = true;
+            clearPhoto({ stopPropagation: () => {} });
+          }, 5000);
+        }
+>>>>>>> 79d275c0e84f6918bf5930919a3d955a5b253310
       } else {
         document.getElementById('errText').textContent = data.error || 'Verification failed.';
         errMsg.style.display = 'flex';

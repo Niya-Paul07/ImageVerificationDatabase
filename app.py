@@ -5,9 +5,7 @@ import tempfile
 import psycopg2
 import psycopg2.extras
 import bcrypt
-from sklearn.metrics.pairwise import cosine_similarity
-import cv2
-import numpy as np
+import boto3
 import json
 from PIL import Image
 from functools import wraps
@@ -139,6 +137,7 @@ def register_student():
         return jsonify({"error": "Missing required fields"}), 400
 
     img_bytes = photo.read()
+<<<<<<< HEAD
 
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp:
@@ -161,6 +160,9 @@ def register_student():
         return jsonify({
         "error": str(e)
         }), 400
+=======
+    embedding = "rekognition"  # placeholder, actual comparison done at verify time
+>>>>>>> 79d275c0e84f6918bf5930919a3d955a5b253310
 
     conn = get_db()
     cursor = conn.cursor()
@@ -201,14 +203,27 @@ def verify_student():
 
     img_bytes = photo.read()
 
-    stored_embedding = np.array(json.loads(student["face_embedding"])).reshape(1, -1)
-    nparr = np.frombuffer(img_bytes, np.uint8)
-    live_img = cv2.imdecode(nparr, cv2.IMREAD_GRAYSCALE)
-    live_img_resized = cv2.resize(live_img, (100, 100))
-    live_embedding = live_img_resized.flatten().reshape(1, -1)
-    similarity = cosine_similarity(stored_embedding, live_embedding)[0][0]
-    accuracy_percentage = round(float(similarity) * 100, 2)
-    result = "PASS" if accuracy_percentage >= 60 else "FAIL"
+    try:
+        rekognition = boto3.client('rekognition', region_name='us-east-1')
+        source_bytes = bytes(student["photo"]) if isinstance(student["photo"], memoryview) else student["photo"]
+        response = rekognition.compare_faces(
+            SourceImage={'Bytes': source_bytes},
+            TargetImage={'Bytes': img_bytes},
+            SimilarityThreshold=60
+        )
+        if response['FaceMatches']:
+            accuracy_percentage = round(response['FaceMatches'][0]['Similarity'], 2)
+            result = "PASS"
+        else:
+            accuracy_percentage = 0.0
+            result = "FAIL"
+    except Exception as e:
+        cursor.close()
+        conn.close()
+        error_msg = str(e)
+        if 'InvalidImageFormat' in error_msg or 'InvalidParameter' in error_msg or 'no face' in error_msg.lower() or 'Face' in error_msg:
+            return jsonify({"error": "No face detected in the captured photo. Please upload a clear front-facing photo."}), 400
+        return jsonify({"error": f"Face comparison failed: {error_msg}"}), 500
 
     cursor.execute("""
         INSERT INTO verification_logs (student_id, result, accuracy_percentage, captured_photo, verified_by)
