@@ -194,7 +194,10 @@ def verify_student():
     except Exception as e:
         cursor.close()
         conn.close()
-        return jsonify({"error": f"Face comparison failed: {str(e)}"}), 500
+        error_msg = str(e)
+        if 'InvalidImageFormatException' in error_msg or 'no face' in error_msg.lower():
+            return jsonify({"error": "No face detected in the captured photo. Please upload a clear front-facing photo."}), 400
+        return jsonify({"error": f"Face comparison failed: {error_msg}"}), 500
 
     cursor.execute("""
         INSERT INTO verification_logs (student_id, result, accuracy_percentage, captured_photo, verified_by)
