@@ -179,8 +179,9 @@ def verify_student():
 
     try:
         rekognition = boto3.client('rekognition', region_name='us-east-1')
+        source_bytes = bytes(student["photo"]) if isinstance(student["photo"], memoryview) else student["photo"]
         response = rekognition.compare_faces(
-            SourceImage={'Bytes': bytes(student["photo"])},
+            SourceImage={'Bytes': source_bytes},
             TargetImage={'Bytes': img_bytes},
             SimilarityThreshold=60
         )
