@@ -323,6 +323,13 @@
             <img id="capturedPhotoEl" src="" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid #185FA5;" />
         </div>
     </div>
+    </div>
+        <div id="nextCandidateWrap" style="display:none; margin-top:1rem;">
+            <button onclick="resetForNext()" style="padding:10px 24px; background:#042C53; color:#B5D4F4; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">
+                <i class="fa-solid fa-arrow-right"></i> Next candidate
+            </button>
+        </div>
+    </div>
 </div>
 
   <!-- Error -->
@@ -488,6 +495,20 @@
     document.getElementById('uploadPlaceholder').style.display = 'block';
     document.getElementById('photoPreview').style.display = 'none';
   }
+  
+  function resetForNext() {
+    document.getElementById('resultCard').style.display = 'none';
+    document.getElementById('nextCandidateWrap').style.display = 'none';
+    document.getElementById('student_id').value = '';
+    capturedBlob = null;
+    document.getElementById('capturedImg').style.display = 'none';
+    document.getElementById('btnCapture').style.display = 'flex';
+    document.getElementById('btnRetake').style.display = 'none';
+    document.getElementById('btnStart').style.display = 'flex';
+    document.getElementById('btnCapture').disabled = true;
+    clearPhoto({ stopPropagation: () => {} });
+}
+
 
   async function handleVerify() {
     const errMsg = document.getElementById('errMsg');
@@ -554,6 +575,9 @@
         document.getElementById('registeredPhotoEl').src = 'data:image/jpeg;base64,' + data.registered_photo;
         document.getElementById('capturedPhotoEl').src = 'data:image/jpeg;base64,' + data.captured_photo;
         resultCard.style.display = 'block';
+        if (isPass) {
+    document.getElementById('nextCandidateWrap').style.display = 'block';
+}
         resultCard.scrollIntoView({ behavior: 'smooth' });
 
         if (!isPass) {
