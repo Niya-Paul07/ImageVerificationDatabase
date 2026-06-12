@@ -1,7 +1,5 @@
 from flask import Flask, request, jsonify, session, render_template, redirect, url_for
 import os
-from deepface import DeepFace
-import tempfile
 import psycopg2
 import psycopg2.extras
 import bcrypt
@@ -137,32 +135,7 @@ def register_student():
         return jsonify({"error": "Missing required fields"}), 400
 
     img_bytes = photo.read()
-<<<<<<< HEAD
-
-    try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp:
-            temp.write(img_bytes)
-            temp_path = temp.name
-
-        embedding_obj = DeepFace.represent(
-            img_path=temp_path,
-            model_name="Facenet512",
-            enforce_detection=True
-        )
-
-        embedding = json.dumps(
-            embedding_obj[0]["embedding"]
-        )
-
-        os.remove(temp_path)
-
-    except Exception as e:
-        return jsonify({
-        "error": str(e)
-        }), 400
-=======
-    embedding = "rekognition"  # placeholder, actual comparison done at verify time
->>>>>>> 79d275c0e84f6918bf5930919a3d955a5b253310
+    embedding = "rekognition"
 
     conn = get_db()
     cursor = conn.cursor()
