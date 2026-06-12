@@ -309,16 +309,10 @@
 
 </div>
 <script>
-  let stream        = null;
-  let capturedBlob  = null;
-  let capturedURL   = null;
-  let activeTab     = 'webcam';
-  let countdownTimer = null;
-  const PASS_SECS   = 15;
-  const FAIL_SECS   = 5;
-  const CIRCUMFERENCE = 100; // matches stroke-dasharray="100 100"
+  let stream = null;
+  let capturedBlob = null;
+  let activeTab = 'webcam';
 
-  /* ── Tabs ── */
   function switchTab(tab) {
     activeTab = tab;
     document.getElementById('panelWebcam').classList.toggle('active', tab === 'webcam');
@@ -328,73 +322,72 @@
     if (tab === 'upload' && stream) stopCamera();
   }
 
-  /* ── Camera ── */
   async function startCamera() {
     try {
       stream = await navigator.mediaDevices.getUserMedia({ video: true });
       const video = document.getElementById('webcamVideo');
-      video.srcObject     = stream;
+      video.srcObject = stream;
       video.style.display = 'block';
       document.getElementById('webcamPlaceholder').style.display = 'none';
-      document.getElementById('capturedImg').style.display       = 'none';
-      document.getElementById('btnCapture').disabled             = false;
-      document.getElementById('btnStart').style.display          = 'none';
-      document.getElementById('btnRetake').style.display         = 'none';
-      capturedBlob = null; capturedURL = null;
-    } catch { alert('Could not access camera. Please allow permissions or use photo upload.'); }
+      document.getElementById('btnCapture').disabled = false;
+      document.getElementById('btnStart').style.display = 'none';
+    } catch (err) {
+      alert('Could not access camera. Please allow camera permissions or use photo upload instead.');
+    }
   }
 
   function capturePhoto() {
     const video = document.getElementById('webcamVideo');
     const canvas = document.getElementById('canvasEl');
-    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
     canvas.getContext('2d').drawImage(video, 0, 0);
     canvas.toBlob(blob => {
       capturedBlob = blob;
-      capturedURL  = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(blob);
       const img = document.getElementById('capturedImg');
-      img.src = capturedURL; img.style.display = 'block';
-      document.getElementById('webcamVideo').style.display  = 'none';
-      document.getElementById('btnCapture').style.display   = 'none';
-      document.getElementById('btnRetake').style.display    = 'flex';
+      img.src = url;
+      img.style.display = 'block';
+      video.style.display = 'none';
+      document.getElementById('btnCapture').style.display = 'none';
+      document.getElementById('btnRetake').style.display = 'flex';
       stopCamera();
     }, 'image/jpeg');
   }
 
   function retakePhoto() {
-    capturedBlob = null; capturedURL = null;
+    capturedBlob = null;
     document.getElementById('capturedImg').style.display = 'none';
-    document.getElementById('btnCapture').style.display  = 'flex';
-    document.getElementById('btnRetake').style.display   = 'none';
-    document.getElementById('btnStart').style.display    = 'flex';
-    document.getElementById('btnCapture').disabled       = true;
+    document.getElementById('btnCapture').style.display = 'flex';
+    document.getElementById('btnRetake').style.display = 'none';
+    document.getElementById('btnStart').style.display = 'flex';
+    document.getElementById('btnCapture').disabled = true;
   }
 
   function stopCamera() {
     if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
   }
 
-  /* ── Upload ── */
   function handlePhotoSelect(e) {
-    const file = e.target.files[0]; if (!file) return;
-    capturedURL = URL.createObjectURL(file);
+    const file = e.target.files[0];
+    if (!file) return;
     const reader = new FileReader();
-    reader.onload = ev => {
-      document.getElementById('previewImg').src               = ev.target.result;
-      document.getElementById('previewName').textContent      = file.name;
+    reader.onload = (ev) => {
+      document.getElementById('previewImg').src = ev.target.result;
+      document.getElementById('previewName').textContent = file.name;
       document.getElementById('uploadPlaceholder').style.display = 'none';
-      document.getElementById('photoPreview').style.display      = 'flex';
+      document.getElementById('photoPreview').style.display = 'flex';
     };
     reader.readAsDataURL(file);
   }
 
   function clearPhoto(e) {
-    e.stopPropagation(); capturedURL = null;
-    document.getElementById('photoInput').value                = '';
+    e.stopPropagation();
+    document.getElementById('photoInput').value = '';
     document.getElementById('uploadPlaceholder').style.display = 'block';
-    document.getElementById('photoPreview').style.display      = 'none';
+    document.getElementById('photoPreview').style.display = 'none';
   }
-  
+
   function resetForNext() {
     document.getElementById('resultCard').style.display = 'none';
     document.getElementById('nextCandidateWrap').style.display = 'none';
@@ -406,190 +399,77 @@
     document.getElementById('btnStart').style.display = 'flex';
     document.getElementById('btnCapture').disabled = true;
     clearPhoto({ stopPropagation: () => {} });
-}
-
-
-  /* ── Countdown ring ── */
-  function startCountdown(totalSecs, isPass) {
-    clearCountdown();
-    let secs = totalSecs;
-
-    const banner   = document.getElementById('countdownBanner');
-    const ringFill = document.getElementById('ringFill');
-    const ringNum  = document.getElementById('ringNum');
-    const bannerText = document.getElementById('bannerText');
-
-    banner.className = 'countdown-banner ' + (isPass ? 'pass' : 'fail') + ' show';
-    bannerText.textContent = isPass
-      ? `Verified ✓ — moving to next candidate in ${totalSecs}s`
-      : `Verification failed — moving to next candidate in ${totalSecs}s`;
-    ringNum.textContent = secs;
-    ringFill.style.strokeDashoffset = '0';
-
-    countdownTimer = setInterval(() => {
-      secs--;
-      ringNum.textContent = secs;
-      const progress = ((totalSecs - secs) / totalSecs) * CIRCUMFERENCE;
-      ringFill.style.strokeDashoffset = progress;
-      if (secs <= 0) { clearCountdown(); goNext(); }
-    }, 1000);
   }
 
-  function clearCountdown() {
-    if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
-    document.getElementById('countdownBanner').classList.remove('show');
-  }
-
-  /* ── Go to next candidate ── */
-  function goNext() {
-    clearCountdown();
-    document.getElementById('resultCard').style.display = 'none';
-    document.getElementById('student_id').value         = '';
-    document.getElementById('student_id').focus();
-    resetCapture();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  function resetCapture() {
-    capturedBlob = null; capturedURL = null; stopCamera();
-    document.getElementById('capturedImg').style.display       = 'none';
-    document.getElementById('webcamVideo').style.display       = 'none';
-    document.getElementById('webcamPlaceholder').style.display = 'flex';
-    document.getElementById('btnStart').style.display          = 'flex';
-    document.getElementById('btnCapture').style.display        = 'flex';
-    document.getElementById('btnCapture').disabled             = true;
-    document.getElementById('btnRetake').style.display         = 'none';
-    document.getElementById('photoInput').value                = '';
-    document.getElementById('uploadPlaceholder').style.display = 'block';
-    document.getElementById('photoPreview').style.display      = 'none';
-    if (activeTab === 'webcam') startCamera();
-  }
-
-  /* ── Verify ── */
   async function handleVerify() {
-    clearCountdown();
-    const errMsg     = document.getElementById('errMsg');
+    const errMsg = document.getElementById('errMsg');
+    const errText = document.getElementById('errText');
     const resultCard = document.getElementById('resultCard');
-    const btn        = document.getElementById('submitBtn');
+    const btn = document.getElementById('submitBtn');
 
-    errMsg.style.display    = 'none';
+    errMsg.style.display = 'none';
     resultCard.style.display = 'none';
 
-    const student_id  = document.getElementById('student_id').value.trim();
+    const student_id = document.getElementById('student_id').value.trim();
     const verified_by = document.getElementById('verified_by').value.trim();
 
     if (!student_id) {
-      document.getElementById('errText').textContent = 'Please enter a student ID.';
-      errMsg.style.display = 'flex'; return;
+      errText.textContent = 'Please enter a student ID.';
+      errMsg.style.display = 'flex';
+      return;
     }
 
     let photoBlob = null;
+
     if (activeTab === 'webcam') {
       if (!capturedBlob) {
-        document.getElementById('errText').textContent = 'Please capture a photo using the webcam.';
-        errMsg.style.display = 'flex'; return;
+        errText.textContent = 'Please capture a photo using the webcam.';
+        errMsg.style.display = 'flex';
+        return;
       }
       photoBlob = capturedBlob;
     } else {
       const file = document.getElementById('photoInput').files[0];
       if (!file) {
-        document.getElementById('errText').textContent = 'Please upload a photo.';
-        errMsg.style.display = 'flex'; return;
+        errText.textContent = 'Please upload a photo.';
+        errMsg.style.display = 'flex';
+        return;
       }
-      photoBlob   = file;
-      capturedURL = URL.createObjectURL(file);
+      photoBlob = file;
     }
 
     const formData = new FormData();
-    formData.append('student_id',  student_id);
+    formData.append('student_id', student_id);
     formData.append('verified_by', verified_by);
     formData.append('photo', photoBlob, 'capture.jpg');
 
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying…';
-    btn.disabled  = true;
+    btn.disabled = true;
 
     try {
-      const res  = await fetch('/verify', { method: 'POST', body: formData, credentials: 'include' });
+      const res = await fetch('/verify', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
       const data = await res.json();
 
       if (data.result) {
         const isPass = data.result === 'PASS';
-
-        // Result card header
         resultCard.className = 'result-card ' + (isPass ? 'pass' : 'fail');
-        document.getElementById('resultIcon').className       = isPass ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark';
-        document.getElementById('resultLabel').textContent    = data.result;
+        document.getElementById('resultIcon').className = isPass
+          ? 'fa-solid fa-circle-check'
+          : 'fa-solid fa-circle-xmark';
+        document.getElementById('resultLabel').textContent = data.result;
         document.getElementById('resultAccuracy').textContent = `Accuracy: ${data.accuracy_percentage}%`;
-<<<<<<< HEAD
-        document.getElementById('resultStudent').textContent  = `Student ID: ${data.student_id}`;
-
-        // Uploaded / captured photo
-        const liveEl      = document.getElementById('livePhotoEl');
-        const liveSpinner = document.getElementById('liveSpinner');
-        if (capturedURL) {
-          liveEl.src             = capturedURL;
-          liveEl.style.display   = 'block';
-          liveSpinner.style.display = 'none';
-        } else {
-          liveEl.style.display      = 'none';
-          liveSpinner.style.display = 'flex';
-        }
-
-        // Registered photo — fetch from server
-        const regImg     = document.getElementById('registeredPhotoEl');
-        const regSpinner = document.getElementById('regSpinner');
-        regImg.style.display     = 'none';
-        regSpinner.style.display = 'flex';
-        regSpinner.innerHTML     = '<i class="fa-solid fa-spinner fa-spin"></i><span>Loading…</span>';
-
-        fetch(`/student/photo/${encodeURIComponent(student_id)}`, { credentials: 'include' })
-          .then(r => r.ok ? r.blob() : Promise.reject())
-          .then(blob => {
-            regImg.src               = URL.createObjectURL(blob);
-            regImg.style.display     = 'block';
-            regSpinner.style.display = 'none';
-          })
-          .catch(() => {
-            regSpinner.innerHTML = '<i class="fa-solid fa-image-slash"></i><span>Not available</span>';
-          });
-
-        // Show skip button
-        document.getElementById('skipBtn').classList.add('show');
-
-        resultCard.style.display = 'block';
-=======
         document.getElementById('resultStudent').textContent = `Student ID: ${data.student_id}`;
->>>>>>> 79d275c0e84f6918bf5930919a3d955a5b253310
         document.getElementById('registeredPhotoEl').src = 'data:image/jpeg;base64,' + data.registered_photo;
         document.getElementById('capturedPhotoEl').src = 'data:image/jpeg;base64,' + data.captured_photo;
         resultCard.style.display = 'block';
         if (isPass) {
-    document.getElementById('nextCandidateWrap').style.display = 'block';
-}
+          document.getElementById('nextCandidateWrap').style.display = 'block';
+        }
         resultCard.scrollIntoView({ behavior: 'smooth' });
-<<<<<<< HEAD
-<<<<<<< HEAD
-        // Auto-reset after 5 seconds
-setTimeout(() => {
-    resultCard.style.display = 'none';
-    document.getElementById('student_id').value = '';
-    capturedBlob = null;
-    document.getElementById('capturedImg').style.display = 'none';
-    document.getElementById('btnCapture').style.display = 'flex';
-    document.getElementById('btnRetake').style.display = 'none';
-    document.getElementById('btnStart').style.display = 'flex';
-    document.getElementById('btnCapture').disabled = true;
-    clearPhoto({ stopPropagation: () => {} });
-}, 5000);
-        
-=======
-
-        // Start countdown — 15s PASS, 5s FAIL
-        startCountdown(isPass ? PASS_SECS : FAIL_SECS, isPass);
-
->>>>>>> 77d8c8b8be9d03e37dfe5f669e3e23c6e24df7e4
-=======
-
         if (!isPass) {
           setTimeout(() => {
             resultCard.style.display = 'none';
@@ -603,19 +483,17 @@ setTimeout(() => {
             clearPhoto({ stopPropagation: () => {} });
           }, 5000);
         }
->>>>>>> 79d275c0e84f6918bf5930919a3d955a5b253310
       } else {
-        document.getElementById('errText').textContent = data.error || 'Verification failed.';
+        errText.textContent = data.error || 'Verification failed.';
         errMsg.style.display = 'flex';
       }
-
     } catch {
-      document.getElementById('errText').textContent = 'Could not connect to server. Is Flask running?';
+      errText.textContent = 'Could not connect to server. Is Flask running?';
       errMsg.style.display = 'flex';
     }
 
     btn.innerHTML = '<i class="fa-solid fa-face-smile"></i> Verify student';
-    btn.disabled  = false;
+    btn.disabled = false;
   }
 </script>
 </body>
