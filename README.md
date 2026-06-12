@@ -6,12 +6,11 @@
 
 ## Overview
 
-The Exam Registration Platform allows administrators to register exam candidates and verify their identity on exam day using a photo-based lookup system.
+The Exam Registration Platform allows administrators to register exam candidates and verify their identity on exam day using automated face recognition powered by AWS Rekognition.
 
 **Two core workflows:**
 - **Register Student** — Admin adds candidate details and a photo to the system.
-- **Verify Student** — Invigilator searches for a candidate on exam day and visually confirms identity using the registered photo.
-
+- **Verify Student** —Invigilator captures or uploads a live photo; AWS Rekognition compares it against the registered photo and returns a PASS or FAIL result.
 ---
 
 ## Screenshots
@@ -33,20 +32,24 @@ The Exam Registration Platform allows administrators to register exam candidates
 - Secure admin login with bcrypt password hashing
 - Dashboard with live stats — total registered students, passed/failed verifications, total checks
 - Register students with: Student ID, Full Name, Date of Birth, Department, Email, Phone, and Photo
-- Search registered students by name or Student ID
-- Departments supported: Computer Science, Electronics, Mechanical, Civil
-- Student list with registration timestamps
-
+- Automated face verification using AWS Rekognition (CompareFaces API)
+-Displays both registered and captured/uploaded photos side by side after verification
+-Auto-advances to next candidate — 15 seconds on PASS, 5 seconds on FAIL
+-Search registered students by name or Student ID
+Recent verification log with accuracy percentages
 ---
 
 ## Tech Stack
 
-| Layer     | Technology                      |
-|--------------------------------------------|        
-| Frontend  | HTML / CSS / JavaScript         |
-| Backend   | Python                          |
-| Database  | SQLite (`exam_registration.db`) |
-| Auth      | bcrypt (password hashing)       |
+| Layer         | Technology                                |
+|-----------------------------------------------------------|        
+| Frontend      | HTML / CSS / JavaScript                   |
+| Backend       | Python/Flask                              |
+| Database      | PostgreSQL (hosted on Render)             |
+| Auth          | bcrypt (password hashing)                 |
+| Face AI       | AWS Rekognition (CompareFaces)            |
+| Deployment    | Render (free tier web service)            |
+
 
 ---
 
@@ -55,6 +58,7 @@ The Exam Registration Platform allows administrators to register exam candidates
 - Python 3.9.13
 - Flask 3.0
 - PostgreSQL 15
+- AWS account with Rekognition access
 - OpenCV 4.11
 - NumPy 2.0
 - VS Code
@@ -64,21 +68,36 @@ The Exam Registration Platform allows administrators to register exam candidates
 ```bash
 # 1. Clone the repository
 git clone https://github.com/Niya-Paul07/ImageVerificationDatabase.git
-pip install bcrypt
+cd ImageVerificationDatabase
 
-# 3. Create the database tables from schema
-python database.py
-# Creates exam_registration.db using schema.sql
+# 2. Install dependencies
+pip install -r requirements.txt
 
-# 4. Create the default admin account
-python create_admin.py
-# Default credentials — username: admin | password: admin123
-# Change the password after first login!
+# 3. Create a .env file in the project root
+#    In your terminal (inside the project folder):
+#
+#    Windows:
+#      type nul > .env
+#
+#    Mac/Linux:
+#      touch .env
+#
+#    Then open .env in VS Code and add the variables below.
+```
+Add the following to your `.env` file:
 
-# 5. Start the app
-python app.py
+```
+DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/YOUR_DB_NAME
+SECRET_KEY=your_secret_key
+AWS_ACCESS_KEY_ID=your_aws_access_key
+AWS_SECRET_ACCESS_KEY=your_aws_secret_key
+AWS_REGION=us-east-1
 ```
 
+```bash
+# 4. Start the app
+flask run
+```
 Open `http://localhost:5000` in your browser.
 
 ---
@@ -92,27 +111,43 @@ Open `http://localhost:5000` in your browser.
 > ⚠️ Change the default password before deploying to production.
 
 ---
+## AWS Rekognition Setup
+
+1. Log in to the [AWS Console](https://console.aws.amazon.com/).
+2. Go to **IAM** → Create a new user with **AmazonRekognitionReadOnlyAccess** (or FullAccess).
+3. Generate **Access Key ID** and **Secret Access Key** for that user.
+4. Add them to your `.env` file as shown above.
+5. Make sure your AWS region matches the region where Rekognition is available (e.g. `us-east-1`).
+
+No S3 bucket is needed — photos are stored directly as binary data (`BYTEA`) in PostgreSQL.
+
+---
 
 ## Usage
 
 ### Admin Login
 - Navigate to the login page.
 - Enter your username and password.
-- Access is restricted to authorised personnel only.
+- Default credentials — username: `admin` | password: `admin123`
+- Change the password after first login.
+
 
 ### Registering a Student
 1. Go to **Register Student** from the sidebar or dashboard quick actions.
 2. Fill in: Student ID, Full Name, Date of Birth, Department, Email, Phone.
-3. Upload the student's photo.
+3. Upload the student's photo.( clear, front-facing )
 4. Submit — the student appears in the registered list on the dashboard.
 
 ### Verifying a Student on Exam Day
 1. Go to **Verify Student** from the sidebar or dashboard quick actions.
-2. Search by name or Student ID.
-3. The registered photo and details are displayed.
-4. The invigilator visually confirms the identity of the candidate.
+2. Enter the Student ID.
+3. Capture a photo using the webcam or upload one.
+4. Submit — AWS Rekognition compares the live photo against the registered photo.
+5. Result shows **PASS** or **FAIL** with accuracy percentage and both photos side by side.
+6. Screen auto-advances to the next candidate after the timer expires.
 
 ---
+
 
 ## Project Structure
 
@@ -141,29 +176,47 @@ ImageVerificationDatabase/
 ```
 
 ---
-
 ## Database
 
-The app uses a local SQLite database (`exam_registration.db`). No external database setup is needed.
+PostgreSQL is used for all data storage, hosted on **Render's free tier**.
 
-The schema is defined in `schema.sql` and applied by running `database.py`. To reset and recreate everything from scratch:
+- Student photos are stored as `BYTEA` directly in the database — no external file storage needed.
+- Face embeddings are not stored; AWS Rekognition performs live comparison on each verification request.
+
+To reset the database locally:
 
 ```bash
-# Step 1 — Recreate tables from schema
 python database.py
-
-# Step 2 — Recreate admin account
 python create_admin.py
 ```
 
 ---
 
+## Deployment (Render)
+
+1. Push your code to GitHub.
+2. Go to [Render](https://render.com) and create a new **Web Service**.
+3. Connect your GitHub repository.
+4. Set the following environment variables in Render's dashboard:
+   - `DATABASE_URL`
+   - `SECRET_KEY`
+   - `AWS_ACCESS_KEY_ID`
+   - `AWS_SECRET_ACCESS_KEY`
+   - `AWS_REGION`
+5. Set the start command to:
+   ```
+   gunicorn app:app
+   ```
+6. Deploy.
+
+---
+
 ## Known Limitations
 
-- Identity verification is manual (photo comparison) — no automated face recognition.
-- No self-registration for students; all entries are admin-managed.
 - Single admin account (no multi-user roles yet).
-- SQLite is suitable for small-scale use (up to ~150 candidates); switch to PostgreSQL for larger deployments.
+- AWS Rekognition requires a clear, front-facing photo for accurate results.
+- Render free tier spins down after inactivity — first request may be slow.
+- No self-registration for students; all entries are admin-managed.
 
 ---
 
