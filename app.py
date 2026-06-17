@@ -226,7 +226,7 @@ def api_dashboard():
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) as count FROM students")
     total_students = cursor.fetchone()["count"]
-    cursor.execute("SELECT COUNT(*) as count FROM verification_logs")
+    cursor.execute("SELECT COUNT(DISTINCT student_id) as count FROM verification_logs")
     total_verifications = cursor.fetchone()["count"]
     cursor.execute("SELECT COUNT(*) as count FROM verification_logs WHERE result='PASS'")
     total_pass = cursor.fetchone()["count"]
