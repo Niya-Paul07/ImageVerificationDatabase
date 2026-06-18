@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+  history.pushState(null, null, location.href);
+  window.onpopstate = function() {
+    history.pushState(null, null, location.href);
+  };
+</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Face Verification — Exam Registration Platform</title>
@@ -315,7 +321,7 @@
       currentStudent = data;
       document.getElementById('detailId').textContent = data.student_id;
       document.getElementById('detailName').textContent = data.full_name;
-      document.getElementById('detailDob').textContent = data.dob || '—';
+      document.getElementById('detailDob').textContent = data.dob ? data.dob.split('T')[0] : '—';
       document.getElementById('detailDept').textContent = data.department || '—';
       document.getElementById('detailEmail').textContent = data.email || '—';
       document.getElementById('studentPhoto').src = `/student/photo/${encodeURIComponent(data.student_id)}`;
@@ -353,9 +359,14 @@
   }
 
   function handleCaptureKeydown(e) {
-    if (e.key === 'Enter' && captureReady) {
+    if (e.key === 'Enter') {
       e.preventDefault();
-      captureAndVerify();
+      const popupVisible = document.getElementById('popupOverlay').classList.contains('show');
+      if (popupVisible) {
+        nextCandidate();
+      } else if (captureReady) {
+        captureAndVerify();
+      }
     }
   }
 
@@ -430,11 +441,12 @@
     document.getElementById('popupStudent').textContent = `Student ID: ${data.student_id}`;
     document.getElementById('popupRegisteredPhoto').src = 'data:image/jpeg;base64,' + data.registered_photo;
     document.getElementById('popupCapturedPhoto').src = 'data:image/jpeg;base64,' + data.captured_photo;
+    document.addEventListener('keydown', handleCaptureKeydown);
 
     document.getElementById('popupDetails').innerHTML = `
       <div class="popup-detail-row"><span class="popup-detail-label">Name</span><span class="popup-detail-value">${currentStudent.full_name}</span></div>
       <div class="popup-detail-row"><span class="popup-detail-label">Department</span><span class="popup-detail-value">${currentStudent.department || '—'}</span></div>
-      <div class="popup-detail-row"><span class="popup-detail-label">Date of birth</span><span class="popup-detail-value">${currentStudent.dob || '—'}</span></div>
+      <div class="popup-detail-row"><span class="popup-detail-label">Date of birth</span><span class="popup-detail-value">${currentStudent.dob ? currentStudent.dob.split('T')[0] : '—'}</span></div>
     `;
 
     document.getElementById('popupPassBtns').style.display = isPass ? 'block' : 'none';
