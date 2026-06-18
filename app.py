@@ -94,6 +94,11 @@ def verify_page():
 def dashboard():
     return render_template("dashboard.html")
 
+@app.route("/reports")
+@login_required
+def reports():
+    return render_template("reports.html")
+
 # ── Admin Login ───────────────────────────────────────────
 @app.route("/admin/login", methods=["POST"])
 def admin_login():
@@ -250,3 +255,19 @@ def api_dashboard():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+@app.route("/student/photo/<student_id>")
+@login_required
+def student_photo(student_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT photo FROM students WHERE student_id = %s", (student_id,))
+    student = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    if not student or not student["photo"]:
+        return "", 404
+    from flask import Response
+    photo_bytes = bytes(student["photo"]) if isinstance(student["photo"], memoryview) else student["photo"]
+    return Response(photo_bytes, mimetype="image/jpeg")

@@ -293,6 +293,7 @@
 
   <a href="/dashboard" class="nav-item active"><i class="fa-solid fa-gauge"></i> Dashboard</a>
   <a href="/verify-page" class="nav-item"><i class="fa-solid fa-face-smile"></i> Verify student</a>
+  <a href="/reports" class="nav-item"><i class="fa-solid fa-chart-bar"></i> Reports</a>
 
   <div class="sidebar-spacer"></div>
 
@@ -346,32 +347,6 @@
       </a>
     </div>
   </div>
-
-  <!-- Student list -->
-  <div class="card">
-    <div class="card-header">
-      <div class="card-title"><i class="fa-solid fa-users"></i> Registered students</div>
-      <div class="search-wrap">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" id="studentSearch" placeholder="Search by name or ID…" oninput="filterStudents()" />
-      </div>
-    </div>
-    <div id="studentTableWrap">
-      <div class="loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading…</div>
-    </div>
-  </div>
-
-  <!-- Recent verifications -->
-  <div class="card">
-    <div class="card-header">
-      <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Recent verifications</div>
-    </div>
-    <div id="verificationTableWrap">
-      <div class="loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading…</div>
-    </div>
-  </div>
-
-</div>
 
 <script>
   let allStudents = [];
