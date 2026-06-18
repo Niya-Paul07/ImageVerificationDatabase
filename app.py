@@ -11,6 +11,13 @@ from functools import wraps
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "cdit_secret_key")
 
+@app.after_request
+def add_no_cache(response):
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
 def get_db():
     conn = psycopg2.connect(os.environ.get("DATABASE_URL"), cursor_factory=psycopg2.extras.RealDictCursor)
     return conn
