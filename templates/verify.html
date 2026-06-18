@@ -7,197 +7,325 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; padding: 2rem; }
-    .page-wrap { max-width: 680px; margin: 0 auto; }
-    .page-header { display: flex; align-items: center; gap: 12px; margin-bottom: 2rem; }
-    .brand-icon { width: 44px; height: 44px; border-radius: 10px; background: #042C53; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .brand-icon i { color: #B5D4F4; font-size: 20px; }
-    .brand-name { font-size: 15px; font-weight: 600; color: #1a1a2e; line-height: 1.3; }
-    .brand-sub { font-size: 12px; color: #888; }
-    .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #185FA5; text-decoration: none; margin-bottom: 1.5rem; }
-    .back-link:hover { text-decoration: underline; }
-    .card { background: #fff; border-radius: 14px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); padding: 2rem; margin-bottom: 1.5rem; }
-    .card-title { font-size: 16px; font-weight: 600; color: #1a1a2e; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 8px; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed; top: 0; left: 0; width: 220px; height: 100vh;
+      background: #042C53; display: flex; flex-direction: column; padding: 1.5rem 1rem; z-index: 100;
+    }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 2rem;
+      padding-bottom: 1.5rem; border-bottom: 1px solid rgba(181,212,244,0.15); }
+    .sidebar-brand i { font-size: 22px; color: #B5D4F4; }
+    .sidebar-brand-text { font-size: 13px; font-weight: 600; color: #fff; line-height: 1.4; }
+    .sidebar-brand-sub { font-size: 11px; color: rgba(181,212,244,0.6); }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+      border-radius: 8px; color: rgba(181,212,244,0.7); text-decoration: none;
+      font-size: 13px; font-weight: 500; margin-bottom: 4px; transition: all 0.15s; }
+    .nav-item:hover { background: rgba(181,212,244,0.1); color: #fff; }
+    .nav-item.active { background: rgba(181,212,244,0.15); color: #fff; }
+    .nav-item i { font-size: 16px; width: 18px; }
+    .sidebar-spacer { flex: 1; }
+    .logout-btn { display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+      border-radius: 8px; color: rgba(181,212,244,0.7); font-size: 13px; font-weight: 500;
+      cursor: pointer; border: none; background: none; width: 100%; text-align: left; transition: all 0.15s; }
+    .logout-btn:hover { background: rgba(220,80,80,0.15); color: #f09595; }
+    .logout-btn i { font-size: 16px; }
+
+    /* Main */
+    .main { margin-left: 220px; padding: 2rem; min-height: 100vh; }
+    .page-title { font-size: 22px; font-weight: 600; color: #1a1a2e; margin-bottom: 0.25rem; }
+    .page-sub { font-size: 13px; color: #888; margin-bottom: 2rem; }
+
+    /* Two column layout */
+    .verify-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    .card { background: #fff; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 1.5rem; }
+    .card-title { font-size: 15px; font-weight: 600; color: #1a1a2e; margin-bottom: 1.25rem;
+      display: flex; align-items: center; gap: 8px; }
     .card-title i { color: #185FA5; font-size: 18px; }
-    .field { margin-bottom: 1rem; }
-    .field label { display: block; font-size: 13px; color: #555; margin-bottom: 6px; font-weight: 500; }
-    .field input { width: 100%; padding: 10px 14px; border: 1px solid #dde1e7; border-radius: 8px; font-size: 14px; color: #1a1a2e; background: #fafafa; transition: border-color 0.2s, box-shadow 0.2s; outline: none; }
-    .field input:focus { border-color: #185FA5; box-shadow: 0 0 0 3px rgba(24,95,165,0.1); background: #fff; }
-    .required { color: #a32d2d; margin-left: 2px; }
-    .tabs { display: flex; gap: 8px; margin-bottom: 1.25rem; }
-    .tab-btn { flex: 1; padding: 9px; font-size: 13px; font-weight: 500; border: 1px solid #dde1e7; border-radius: 8px; background: #fafafa; color: #555; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s; }
-    .tab-btn.active { background: #042C53; color: #B5D4F4; border-color: #042C53; }
-    .webcam-wrap { position: relative; background: #1a1a2e; border-radius: 10px; overflow: hidden; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; }
+
+    /* Student ID input */
+    .id-input-wrap { position: relative; }
+    .id-input-wrap input {
+      width: 100%; padding: 12px 14px; border: 2px solid #dde1e7; border-radius: 8px;
+      font-size: 15px; color: #1a1a2e; background: #fafafa; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .id-input-wrap input:focus { border-color: #185FA5; box-shadow: 0 0 0 3px rgba(24,95,165,0.1); background: #fff; }
+    .input-hint { font-size: 12px; color: #aaa; margin-top: 6px; }
+    .input-error { font-size: 12px; color: #a32d2d; margin-top: 6px; display: none; }
+
+    /* Student details */
+    .student-details { margin-top: 1.5rem; display: none; }
+    .student-photo-wrap { text-align: center; margin-bottom: 1rem; }
+    .student-photo-wrap img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
+      border: 3px solid #185FA5; }
+    .detail-row { display: flex; justify-content: space-between; padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { color: #888; font-weight: 500; }
+    .detail-value { color: #1a1a2e; font-weight: 500; text-align: right; }
+
+    .loading-details { text-align: center; padding: 1.5rem; color: #aaa; font-size: 13px; display: none; }
+    .loading-details i { font-size: 24px; display: block; margin-bottom: 0.5rem; }
+
+    .error-msg { font-size: 13px; color: #a32d2d; background: #fcebeb; border: 1px solid #f7c1c1;
+      border-radius: 8px; padding: 10px 14px; margin-top: 1rem; display: none;
+      align-items: center; gap: 8px; }
+
+    /* Webcam */
+    .webcam-status { font-size: 13px; color: #888; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #aaa; }
+    .status-dot.active { background: #3B6D11; }
+    .status-dot.waiting { background: #e8a020; }
+
+    .webcam-wrap { position: relative; background: #1a1a2e; border-radius: 10px;
+      overflow: hidden; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; }
     #webcamVideo { width: 100%; height: 100%; object-fit: cover; display: none; }
-    .webcam-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: #aaa; }
-    .webcam-placeholder i { font-size: 40px; }
-    .webcam-placeholder span { font-size: 13px; }
+    .webcam-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: #555; text-align: center; padding: 1rem; }
+    .webcam-placeholder i { font-size: 40px; color: #aaa; }
+    .webcam-placeholder span { font-size: 13px; color: #aaa; }
     #canvasEl { display: none; }
-    #capturedImg { display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
-    .webcam-controls { display: flex; gap: 8px; margin-top: 0.75rem; }
-    .cam-btn { flex: 1; padding: 10px; font-size: 13px; font-weight: 500; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: opacity 0.15s; }
-    .cam-btn:hover { opacity: 0.85; }
-    .cam-btn.start { background: #185FA5; color: #fff; }
-    .cam-btn.capture { background: #042C53; color: #B5D4F4; }
-    .cam-btn.retake { background: #f0f4f8; color: #555; border: 1px solid #dde1e7; }
-    .cam-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .photo-upload-area { border: 2px dashed #dde1e7; border-radius: 10px; padding: 2rem; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; position: relative; }
-    .photo-upload-area:hover { border-color: #185FA5; background: #f5f9ff; }
-    .photo-upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-    .upload-icon { font-size: 32px; color: #aaa; margin-bottom: 0.5rem; }
-    .upload-text { font-size: 14px; color: #555; }
-    .upload-hint { font-size: 12px; color: #aaa; margin-top: 4px; }
-    .photo-preview { display: none; flex-direction: column; align-items: center; gap: 0.75rem; }
-    .photo-preview img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #185FA5; }
-    .photo-preview button { font-size: 12px; color: #a32d2d; background: none; border: none; cursor: pointer; text-decoration: underline; }
-    .msg { display: none; align-items: center; gap: 8px; font-size: 13px; border-radius: 8px; padding: 10px 14px; margin-bottom: 1rem; }
-    .msg.error { color: #a32d2d; background: #fcebeb; border: 1px solid #f7c1c1; }
-    .result-card { display: none; border-radius: 12px; padding: 1.5rem; text-align: center; margin-bottom: 1.5rem; }
-    .result-card.pass { background: #EAF3DE; border: 2px solid #C0DD97; }
-    .result-card.fail { background: #fcebeb; border: 2px solid #f7c1c1; }
-    .result-icon { font-size: 48px; margin-bottom: 0.5rem; }
-    .result-card.pass .result-icon { color: #3B6D11; }
-    .result-card.fail .result-icon { color: #a32d2d; }
-    .result-label { font-size: 28px; font-weight: 700; margin-bottom: 0.25rem; }
-    .result-card.pass .result-label { color: #3B6D11; }
-    .result-card.fail .result-label { color: #a32d2d; }
-    .result-accuracy { font-size: 14px; color: #555; }
-    .result-student { font-size: 13px; color: #888; margin-top: 4px; }
-    .submit-btn { width: 100%; padding: 12px; font-size: 15px; font-weight: 600; background: #042C53; color: #B5D4F4; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.15s; }
-    .submit-btn:hover { opacity: 0.88; }
-    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .panel { display: none; }
-    .panel.active { display: block; }
+
+    .webcam-hint { font-size: 12px; color: #aaa; margin-top: 0.75rem; text-align: center; }
+
+    /* Popup overlay */
+    .popup-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      z-index: 200; align-items: center; justify-content: center; padding: 1rem;
+    }
+    .popup-overlay.show { display: flex; }
+
+    .popup {
+      background: #fff; border-radius: 16px; padding: 2rem; max-width: 560px; width: 100%;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.2); text-align: center;
+    }
+
+    .popup-result-icon { font-size: 56px; margin-bottom: 0.5rem; }
+    .popup.pass .popup-result-icon { color: #3B6D11; }
+    .popup.fail .popup-result-icon { color: #a32d2d; }
+    .popup-result-label { font-size: 32px; font-weight: 700; margin-bottom: 0.25rem; }
+    .popup.pass .popup-result-label { color: #3B6D11; }
+    .popup.fail .popup-result-label { color: #a32d2d; }
+    .popup-accuracy { font-size: 15px; color: #555; margin-bottom: 0.25rem; }
+    .popup-student { font-size: 13px; color: #888; margin-bottom: 1.5rem; }
+
+    .popup-photos { display: flex; gap: 1.5rem; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .popup-photo-box { text-align: center; }
+    .popup-photo-box img { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid #185FA5; }
+    .popup-photo-label { font-size: 12px; color: #888; margin-top: 6px; }
+
+    .popup-details { background: #f8f9fb; border-radius: 10px; padding: 1rem; margin-bottom: 1.5rem; text-align: left; }
+    .popup-detail-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; }
+    .popup-detail-label { color: #888; }
+    .popup-detail-value { color: #1a1a2e; font-weight: 500; }
+
+    .popup-btn {
+      padding: 11px 32px; font-size: 14px; font-weight: 600; border: none; border-radius: 8px;
+      cursor: pointer; transition: opacity 0.15s;
+    }
+    .popup-btn:hover { opacity: 0.85; }
+    .popup-btn.next { background: #042C53; color: #B5D4F4; }
+    .popup-btn.dismiss { background: #f0f4f8; color: #555; margin-right: 0.5rem; }
   </style>
 </head>
 <body>
-<div class="page-wrap">
 
-  <div class="page-header">
-    <div class="brand-icon"><i class="fa-solid fa-shield-halved"></i></div>
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <i class="fa-solid fa-shield-halved"></i>
     <div>
-      <div class="brand-name">Exam Registration Platform</div>
-      <div class="brand-sub">C-DIT, Trivandrum</div>
+      <div class="sidebar-brand-text">Exam Registration</div>
+      <div class="sidebar-brand-sub">C-DIT, Trivandrum</div>
     </div>
   </div>
+  <a href="/dashboard" class="nav-item"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+  <a href="/verify-page" class="nav-item active"><i class="fa-solid fa-face-smile"></i> Verify student</a>
+  <a href="/reports" class="nav-item"><i class="fa-solid fa-chart-bar"></i> Reports</a>
+  <div class="sidebar-spacer"></div>
+  <button class="logout-btn" onclick="handleLogout()">
+    <i class="fa-solid fa-right-from-bracket"></i> Logout
+  </button>
+</div>
 
-  
-  <a href="/dashboard" class="back-link" style="margin-left: 1rem;"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+<!-- Main -->
+<div class="main">
+  <div class="page-title">Face Verification</div>
+  <div class="page-sub">Enter student ID to begin verification</div>
 
-  <!-- Result display -->
-  <div class="result-card" id="resultCard">
-    <div class="result-icon"><i id="resultIcon" class="fa-solid fa-circle-check"></i></div>
-    <div class="result-label" id="resultLabel">PASS</div>
-    <div class="result-accuracy" id="resultAccuracy">Accuracy: 94.5%</div>
-    <div class="result-student" id="resultStudent"></div>
-    <div style="display:flex; gap:1.5rem; justify-content:center; margin-top:1rem; flex-wrap:wrap;">
-      <div style="text-align:center;">
-        <div style="font-size:12px; color:#888; margin-bottom:6px;">Registered photo</div>
-        <img id="registeredPhotoEl" src="" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid #185FA5;" />
+  <div class="verify-grid">
+
+    <!-- LEFT: Student details -->
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-id-card"></i> Student details</div>
+
+      <div class="id-input-wrap">
+        <input type="text" id="studentIdInput" placeholder="Enter Student ID and press Enter"
+          autocomplete="off" onkeydown="handleIdKeydown(event)" oninput="validateInput(this)" />
+        <div class="input-hint">Alphanumeric characters only. Press Enter to fetch details.</div>
+        <div class="input-error" id="inputError"><i class="fa-solid fa-circle-exclamation"></i> Only letters and numbers are allowed.</div>
       </div>
-      <div style="text-align:center;">
-        <div style="font-size:12px; color:#888; margin-bottom:6px;">Captured photo</div>
-        <img id="capturedPhotoEl" src="" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid #185FA5;" />
+
+      <div class="loading-details" id="loadingDetails">
+        <i class="fa-solid fa-spinner fa-spin"></i> Fetching student details…
+      </div>
+
+      <div class="error-msg" id="fetchError">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <span id="fetchErrorText">Student not found.</span>
+      </div>
+
+      <div class="student-details" id="studentDetails">
+        <div class="student-photo-wrap">
+          <img id="studentPhoto" src="" alt="Student photo" />
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Student ID</span>
+          <span class="detail-value" id="detailId">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Full name</span>
+          <span class="detail-value" id="detailName">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Date of birth</span>
+          <span class="detail-value" id="detailDob">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Department</span>
+          <span class="detail-value" id="detailDept">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Email</span>
+          <span class="detail-value" id="detailEmail">—</span>
+        </div>
       </div>
     </div>
-    <div id="nextCandidateWrap" style="display:none; margin-top:1rem;">
-      <button onclick="resetForNext()" style="padding:10px 24px; background:#042C53; color:#B5D4F4; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">
-        <i class="fa-solid fa-arrow-right"></i> Next candidate
-      </button>
-    </div>
-  </div>
 
-  <!-- Error -->
-  <div id="errMsg" class="msg error">
-    <i class="fa-solid fa-circle-exclamation"></i>
-    <span id="errText">Something went wrong.</span>
-  </div>
+    <!-- RIGHT: Webcam -->
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-camera"></i> Live capture</div>
 
-  <!-- Student ID -->
-  <div class="card">
-    <div class="card-title"><i class="fa-solid fa-id-card"></i> Student details</div>
-    <div class="field">
-      <label>Student ID <span class="required">*</span></label>
-      <input type="text" id="student_id" placeholder="e.g. S001" />
-    </div>
-    <div class="field">
-      <label>Verified by</label>
-      <input type="text" id="verified_by" placeholder="Admin username" value="admin" />
-    </div>
-  </div>
+      <div class="webcam-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Waiting for student ID…</span>
+      </div>
 
-  <!-- Photo capture -->
-  <div class="card">
-    <div class="card-title"><i class="fa-solid fa-camera"></i> Capture photo <span class="required">*</span></div>
-    <div class="tabs">
-      <button class="tab-btn active" id="tabWebcam" onclick="switchTab('webcam')">
-        <i class="fa-solid fa-video"></i> Use webcam
-      </button>
-      <button class="tab-btn" id="tabUpload" onclick="switchTab('upload')">
-        <i class="fa-solid fa-upload"></i> Upload photo
-      </button>
-    </div>
-
-    <div class="panel active" id="panelWebcam">
       <div class="webcam-wrap">
         <video id="webcamVideo" autoplay playsinline></video>
         <canvas id="canvasEl"></canvas>
         <div class="webcam-placeholder" id="webcamPlaceholder">
           <i class="fa-solid fa-camera-slash"></i>
-          <span>Camera not started</span>
+          <span>Enter a student ID on the left to activate the camera</span>
         </div>
-        <img id="capturedImg" alt="Captured" />
       </div>
-      <div class="webcam-controls">
-        <button class="cam-btn start" id="btnStart" onclick="startCamera()">
-          <i class="fa-solid fa-video"></i> Start camera
-        </button>
-        <button class="cam-btn capture" id="btnCapture" onclick="capturePhoto()" disabled>
-          <i class="fa-solid fa-camera"></i> Capture
-        </button>
-        <button class="cam-btn retake" id="btnRetake" onclick="retakePhoto()" style="display:none;">
-          <i class="fa-solid fa-rotate-left"></i> Retake
-        </button>
+
+      <div class="webcam-hint" id="webcamHint"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Result Popup -->
+<div class="popup-overlay" id="popupOverlay">
+  <div class="popup" id="resultPopup">
+    <div class="popup-result-icon"><i id="popupIcon" class="fa-solid fa-circle-check"></i></div>
+    <div class="popup-result-label" id="popupLabel">PASS</div>
+    <div class="popup-accuracy" id="popupAccuracy">Accuracy: —</div>
+    <div class="popup-student" id="popupStudent"></div>
+
+    <div class="popup-photos">
+      <div class="popup-photo-box">
+        <img id="popupRegisteredPhoto" src="" alt="Registered" />
+        <div class="popup-photo-label">Registered photo</div>
+      </div>
+      <div class="popup-photo-box">
+        <img id="popupCapturedPhoto" src="" alt="Captured" />
+        <div class="popup-photo-label">Live capture</div>
       </div>
     </div>
 
-    <div class="panel" id="panelUpload">
-      <div class="photo-upload-area">
-        <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoSelect(event)" />
-        <div id="uploadPlaceholder">
-          <div class="upload-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
-          <div class="upload-text">Click to upload a photo</div>
-          <div class="upload-hint">JPG or JPEG — clear, front-facing, single face only</div>
-        </div>
-        <div class="photo-preview" id="photoPreview">
-          <img id="previewImg" src="" alt="Preview" />
-          <span id="previewName"></span>
-          <button onclick="clearPhoto(event)">Remove photo</button>
-        </div>
-      </div>
+    <div class="popup-details" id="popupDetails"></div>
+
+    <div id="popupPassBtns" style="display:none;">
+      <button class="popup-btn next" onclick="nextCandidate()">
+        <i class="fa-solid fa-arrow-right"></i> Next candidate
+      </button>
+    </div>
+    <div id="popupFailMsg" style="display:none; font-size:13px; color:#a32d2d; margin-top:0.5rem;">
+      Screen will reset automatically in <span id="countdown">5</span>s…
     </div>
   </div>
-
-  <div class="card">
-    <button class="submit-btn" id="submitBtn" onclick="handleVerify()">
-      <i class="fa-solid fa-face-smile"></i> Verify student
-    </button>
-  </div>
-
 </div>
 
 <script>
   let stream = null;
-  let capturedBlob = null;
-  let activeTab = 'webcam';
+  let currentStudent = null;
+  let captureReady = false;
+  let countdownTimer = null;
 
-  function switchTab(tab) {
-    activeTab = tab;
-    document.getElementById('panelWebcam').classList.toggle('active', tab === 'webcam');
-    document.getElementById('panelUpload').classList.toggle('active', tab === 'upload');
-    document.getElementById('tabWebcam').classList.toggle('active', tab === 'webcam');
-    document.getElementById('tabUpload').classList.toggle('active', tab === 'upload');
-    if (tab === 'upload' && stream) stopCamera();
+  function validateInput(input) {
+    const val = input.value;
+    const clean = val.replace(/[^a-zA-Z0-9]/g, '');
+    const errorEl = document.getElementById('inputError');
+    if (val !== clean) {
+      input.value = clean;
+      errorEl.style.display = 'flex';
+      setTimeout(() => { errorEl.style.display = 'none'; }, 2000);
+    }
+  }
+
+  function handleIdKeydown(e) {
+    if (e.key === 'Enter') {
+      const id = document.getElementById('studentIdInput').value.trim();
+      if (id) fetchStudent(id);
+    }
+  }
+
+  async function fetchStudent(studentId) {
+    // Reset
+    document.getElementById('studentDetails').style.display = 'none';
+    document.getElementById('fetchError').style.display = 'none';
+    document.getElementById('loadingDetails').style.display = 'block';
+    stopCamera();
+    setStatus('waiting', 'Fetching student details…');
+
+    try {
+      const res = await fetch(`/api/student/${encodeURIComponent(studentId)}`, { credentials: 'include' });
+      const data = await res.json();
+      document.getElementById('loadingDetails').style.display = 'none';
+
+      if (data.error) {
+        document.getElementById('fetchErrorText').textContent = data.error;
+        document.getElementById('fetchError').style.display = 'flex';
+        setStatus('', 'Student not found.');
+        return;
+      }
+
+      currentStudent = data;
+      document.getElementById('detailId').textContent = data.student_id;
+      document.getElementById('detailName').textContent = data.full_name;
+      document.getElementById('detailDob').textContent = data.dob || '—';
+      document.getElementById('detailDept').textContent = data.department || '—';
+      document.getElementById('detailEmail').textContent = data.email || '—';
+      document.getElementById('studentPhoto').src = `/student/photo/${encodeURIComponent(data.student_id)}`;
+      document.getElementById('studentDetails').style.display = 'block';
+
+      // Auto-start webcam
+      await startCamera();
+
+    } catch {
+      document.getElementById('loadingDetails').style.display = 'none';
+      document.getElementById('fetchErrorText').textContent = 'Could not connect to server.';
+      document.getElementById('fetchError').style.display = 'flex';
+    }
   }
 
   async function startCamera() {
@@ -207,172 +335,140 @@
       video.srcObject = stream;
       video.style.display = 'block';
       document.getElementById('webcamPlaceholder').style.display = 'none';
-      document.getElementById('btnCapture').disabled = false;
-      document.getElementById('btnStart').style.display = 'none';
-    } catch (err) {
-      alert('Could not access camera. Please allow camera permissions or use photo upload instead.');
+      setStatus('active', 'Camera active — press Enter to capture');
+      document.getElementById('webcamHint').textContent = 'Press Enter to capture and verify';
+      captureReady = true;
+
+      // Listen for Enter key on the whole document
+      document.addEventListener('keydown', handleCaptureKeydown);
+    } catch {
+      setStatus('', 'Could not access camera. Please allow camera permissions.');
+      document.getElementById('webcamHint').textContent = 'Camera access denied.';
     }
   }
 
-  function capturePhoto() {
+  function handleCaptureKeydown(e) {
+    if (e.key === 'Enter' && captureReady) {
+      e.preventDefault();
+      captureAndVerify();
+    }
+  }
+
+  function stopCamera() {
+    captureReady = false;
+    document.removeEventListener('keydown', handleCaptureKeydown);
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    const video = document.getElementById('webcamVideo');
+    video.style.display = 'none';
+    video.srcObject = null;
+    document.getElementById('webcamPlaceholder').style.display = 'flex';
+    document.getElementById('webcamHint').textContent = '';
+  }
+
+  function setStatus(type, text) {
+    const dot = document.getElementById('statusDot');
+    dot.className = 'status-dot' + (type ? ' ' + type : '');
+    document.getElementById('statusText').textContent = text;
+  }
+
+  async function captureAndVerify() {
+    if (!captureReady || !currentStudent) return;
+    captureReady = false;
+    document.removeEventListener('keydown', handleCaptureKeydown);
+
+    setStatus('waiting', 'Capturing and verifying…');
+    document.getElementById('webcamHint').textContent = 'Verifying…';
+
     const video = document.getElementById('webcamVideo');
     const canvas = document.getElementById('canvasEl');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     canvas.getContext('2d').drawImage(video, 0, 0);
-    canvas.toBlob(blob => {
-      capturedBlob = blob;
-      const url = URL.createObjectURL(blob);
-      const img = document.getElementById('capturedImg');
-      img.src = url;
-      img.style.display = 'block';
-      video.style.display = 'none';
-      document.getElementById('btnCapture').style.display = 'none';
-      document.getElementById('btnRetake').style.display = 'flex';
+
+    canvas.toBlob(async (blob) => {
       stopCamera();
+
+      const formData = new FormData();
+      formData.append('student_id', currentStudent.student_id);
+      formData.append('verified_by', 'admin');
+      formData.append('photo', blob, 'capture.jpg');
+
+      try {
+        const res = await fetch('/verify', { method: 'POST', body: formData, credentials: 'include' });
+        const data = await res.json();
+
+        if (data.result) {
+          showPopup(data);
+        } else {
+          setStatus('', data.error || 'Verification failed.');
+          document.getElementById('webcamHint').textContent = data.error || 'Verification failed.';
+          // Re-enable capture
+          await startCamera();
+        }
+      } catch {
+        setStatus('', 'Could not connect to server.');
+        await startCamera();
+      }
     }, 'image/jpeg');
   }
 
-  function retakePhoto() {
-    capturedBlob = null;
-    document.getElementById('capturedImg').style.display = 'none';
-    document.getElementById('btnCapture').style.display = 'flex';
-    document.getElementById('btnRetake').style.display = 'none';
-    document.getElementById('btnStart').style.display = 'flex';
-    document.getElementById('btnCapture').disabled = true;
-  }
+  function showPopup(data) {
+    const isPass = data.result === 'PASS';
+    const popup = document.getElementById('resultPopup');
+    const overlay = document.getElementById('popupOverlay');
 
-  function stopCamera() {
-    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-  }
+    popup.className = 'popup ' + (isPass ? 'pass' : 'fail');
+    document.getElementById('popupIcon').className = isPass ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark';
+    document.getElementById('popupLabel').textContent = data.result;
+    document.getElementById('popupAccuracy').textContent = `Accuracy: ${data.accuracy_percentage}%`;
+    document.getElementById('popupStudent').textContent = `Student ID: ${data.student_id}`;
+    document.getElementById('popupRegisteredPhoto').src = 'data:image/jpeg;base64,' + data.registered_photo;
+    document.getElementById('popupCapturedPhoto').src = 'data:image/jpeg;base64,' + data.captured_photo;
 
-  function handlePhotoSelect(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      document.getElementById('previewImg').src = ev.target.result;
-      document.getElementById('previewName').textContent = file.name;
-      document.getElementById('uploadPlaceholder').style.display = 'none';
-      document.getElementById('photoPreview').style.display = 'flex';
-    };
-    reader.readAsDataURL(file);
-  }
+    document.getElementById('popupDetails').innerHTML = `
+      <div class="popup-detail-row"><span class="popup-detail-label">Name</span><span class="popup-detail-value">${currentStudent.full_name}</span></div>
+      <div class="popup-detail-row"><span class="popup-detail-label">Department</span><span class="popup-detail-value">${currentStudent.department || '—'}</span></div>
+      <div class="popup-detail-row"><span class="popup-detail-label">Date of birth</span><span class="popup-detail-value">${currentStudent.dob || '—'}</span></div>
+    `;
 
-  function clearPhoto(e) {
-    e.stopPropagation();
-    document.getElementById('photoInput').value = '';
-    document.getElementById('uploadPlaceholder').style.display = 'block';
-    document.getElementById('photoPreview').style.display = 'none';
-  }
+    document.getElementById('popupPassBtns').style.display = isPass ? 'block' : 'none';
+    document.getElementById('popupFailMsg').style.display = isPass ? 'none' : 'block';
 
-  function resetForNext() {
-    document.getElementById('resultCard').style.display = 'none';
-    document.getElementById('nextCandidateWrap').style.display = 'none';
-    document.getElementById('student_id').value = '';
-    capturedBlob = null;
-    document.getElementById('capturedImg').style.display = 'none';
-    document.getElementById('btnCapture').style.display = 'flex';
-    document.getElementById('btnRetake').style.display = 'none';
-    document.getElementById('btnStart').style.display = 'flex';
-    document.getElementById('btnCapture').disabled = true;
-    clearPhoto({ stopPropagation: () => {} });
-  }
+    overlay.classList.add('show');
 
-  async function handleVerify() {
-    const errMsg = document.getElementById('errMsg');
-    const errText = document.getElementById('errText');
-    const resultCard = document.getElementById('resultCard');
-    const btn = document.getElementById('submitBtn');
-
-    errMsg.style.display = 'none';
-    resultCard.style.display = 'none';
-
-    const student_id = document.getElementById('student_id').value.trim();
-    const verified_by = document.getElementById('verified_by').value.trim();
-
-    if (!student_id) {
-      errText.textContent = 'Please enter a student ID.';
-      errMsg.style.display = 'flex';
-      return;
-    }
-
-    let photoBlob = null;
-
-    if (activeTab === 'webcam') {
-      if (!capturedBlob) {
-        errText.textContent = 'Please capture a photo using the webcam.';
-        errMsg.style.display = 'flex';
-        return;
-      }
-      photoBlob = capturedBlob;
-    } else {
-      const file = document.getElementById('photoInput').files[0];
-      if (!file) {
-        errText.textContent = 'Please upload a photo.';
-        errMsg.style.display = 'flex';
-        return;
-      }
-      photoBlob = file;
-    }
-
-    const formData = new FormData();
-    formData.append('student_id', student_id);
-    formData.append('verified_by', verified_by);
-    formData.append('photo', photoBlob, 'capture.jpg');
-
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying…';
-    btn.disabled = true;
-
-    try {
-      const res = await fetch('/verify', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include'
-      });
-      const data = await res.json();
-
-      if (data.result) {
-        const isPass = data.result === 'PASS';
-        resultCard.className = 'result-card ' + (isPass ? 'pass' : 'fail');
-        document.getElementById('resultIcon').className = isPass
-          ? 'fa-solid fa-circle-check'
-          : 'fa-solid fa-circle-xmark';
-        document.getElementById('resultLabel').textContent = data.result;
-        document.getElementById('resultAccuracy').textContent = `Accuracy: ${data.accuracy_percentage}%`;
-        document.getElementById('resultStudent').textContent = `Student ID: ${data.student_id}`;
-        document.getElementById('registeredPhotoEl').src = 'data:image/jpeg;base64,' + data.registered_photo;
-        document.getElementById('capturedPhotoEl').src = 'data:image/jpeg;base64,' + data.captured_photo;
-        resultCard.style.display = 'block';
-        if (isPass) {
-          document.getElementById('nextCandidateWrap').style.display = 'block';
+    if (!isPass) {
+      let secs = 5;
+      document.getElementById('countdown').textContent = secs;
+      countdownTimer = setInterval(() => {
+        secs--;
+        document.getElementById('countdown').textContent = secs;
+        if (secs <= 0) {
+          clearInterval(countdownTimer);
+          nextCandidate();
         }
-        resultCard.scrollIntoView({ behavior: 'smooth' });
-        if (!isPass) {
-          setTimeout(() => {
-            resultCard.style.display = 'none';
-            document.getElementById('student_id').value = '';
-            capturedBlob = null;
-            document.getElementById('capturedImg').style.display = 'none';
-            document.getElementById('btnCapture').style.display = 'flex';
-            document.getElementById('btnRetake').style.display = 'none';
-            document.getElementById('btnStart').style.display = 'flex';
-            document.getElementById('btnCapture').disabled = true;
-            clearPhoto({ stopPropagation: () => {} });
-          }, 5000);
-        }
-      } else {
-        errText.textContent = data.error || 'Verification failed.';
-        errMsg.style.display = 'flex';
-      }
-    } catch {
-      errText.textContent = 'Could not connect to server. Is Flask running?';
-      errMsg.style.display = 'flex';
+      }, 1000);
     }
-
-    btn.innerHTML = '<i class="fa-solid fa-face-smile"></i> Verify student';
-    btn.disabled = false;
   }
+
+  function nextCandidate() {
+    clearInterval(countdownTimer);
+    document.getElementById('popupOverlay').classList.remove('show');
+    document.getElementById('studentIdInput').value = '';
+    document.getElementById('studentDetails').style.display = 'none';
+    document.getElementById('fetchError').style.display = 'none';
+    currentStudent = null;
+    setStatus('', 'Waiting for student ID…');
+    document.getElementById('webcamHint').textContent = '';
+    document.getElementById('studentIdInput').focus();
+  }
+
+  async function handleLogout() {
+    await fetch('/admin/logout', { method: 'POST', credentials: 'include' });
+    window.location.href = '/';
+  }
+
+  // Focus the input on load
+  window.onload = () => document.getElementById('studentIdInput').focus();
 </script>
 
 </body>

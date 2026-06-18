@@ -264,6 +264,20 @@ if __name__ == "__main__":
     app.run(debug=True)
 
 
+@app.route("/api/student/<student_id>")
+@login_required
+def get_student(student_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT student_id, full_name, dob, department, email FROM students WHERE student_id = %s", (student_id,))
+    student = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    if not student:
+        return jsonify({"error": "Student not found"}), 404
+    return jsonify(dict(student))
+
+
 @app.route("/student/photo/<student_id>")
 @login_required
 def student_photo(student_id):
