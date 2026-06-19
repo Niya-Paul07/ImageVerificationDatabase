@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+load_dotenv()
 from flask import Flask, request, jsonify, session, render_template, redirect, url_for
 import os
 import psycopg2
@@ -260,10 +262,6 @@ def api_dashboard():
         "recent_verifications": [dict(v) for v in recent_verifications]
     })
 
-if __name__ == "__main__":
-    app.run(debug=True)
-
-
 @app.route("/api/student/<student_id>")
 @login_required
 def get_student(student_id):
@@ -292,3 +290,6 @@ def student_photo(student_id):
     from flask import Response
     photo_bytes = bytes(student["photo"]) if isinstance(student["photo"], memoryview) else student["photo"]
     return Response(photo_bytes, mimetype="image/jpeg")
+
+if __name__ == "__main__":
+    app.run(debug=True)
