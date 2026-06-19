@@ -1,5 +1,4 @@
-from dotenv import load_dotenv
-load_dotenv()
+
 from flask import Flask, request, jsonify, session, render_template, redirect, url_for
 import os
 import psycopg2
