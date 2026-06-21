@@ -2,6 +2,18 @@
 <html lang="en">
 <head>
   <script>
+  (function() {
+    fetch('/api/check-session', { credentials: 'include', cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.logged_in) {
+          window.location.replace('/');
+        }
+      })
+      .catch(() => { window.location.replace('/'); });
+  })();
+</script>
+  <script>
   history.pushState(null, null, location.href);
   window.onpopstate = function() {
     history.pushState(null, null, location.href);
