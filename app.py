@@ -290,5 +290,9 @@ def student_photo(student_id):
     photo_bytes = bytes(student["photo"]) if isinstance(student["photo"], memoryview) else student["photo"]
     return Response(photo_bytes, mimetype="image/jpeg")
 
+@app.route("/api/check-session")
+def check_session():
+    return jsonify({"logged_in": "admin" in session})
+
 if __name__ == "__main__":
     app.run(debug=True)
