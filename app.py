@@ -14,9 +14,9 @@ app.secret_key = os.environ.get("SECRET_KEY", "cdit_secret_key")
 
 @app.after_request
 def add_no_cache(response):
-    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0, private"
     response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
+    response.headers["Expires"] = "-1"
     return response
 
 def get_db():
