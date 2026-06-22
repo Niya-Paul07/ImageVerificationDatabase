@@ -260,7 +260,31 @@ def api_dashboard():
         "students": [dict(s) for s in students],
         "recent_verifications": [dict(v) for v in recent_verifications]
     })
-
+@app.route("/cleanup-students")
+@login_required
+def cleanup_students():
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # Preview first
+    cursor.execute("SELECT student_id, full_name FROM students WHERE student_id !~ '^S[0-9]{3}$'")
+    to_delete = cursor.fetchall()
+    
+    if not to_delete:
+        return jsonify({"message": "Nothing to delete", "students": []})
+    
+    ids = [s["student_id"] for s in to_delete]
+    
+    cursor.execute("DELETE FROM verification_logs WHERE student_id = ANY(%s)", (ids,))
+    cursor.execute("DELETE FROM students WHERE student_id = ANY(%s)", (ids,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    
+    return jsonify({
+        "message": f"Deleted {len(ids)} students",
+        "deleted": [dict(s) for s in to_delete]
+    })
 @app.route("/api/student/<student_id>")
 @login_required
 def get_student(student_id):
