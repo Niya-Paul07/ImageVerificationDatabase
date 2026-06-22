@@ -266,25 +266,16 @@ def cleanup_students():
     conn = get_db()
     cursor = conn.cursor()
     
-    # Preview first
-    cursor.execute("SELECT student_id, full_name FROM students WHERE student_id !~ '^S[0-9]{3}$'")
-    to_delete = cursor.fetchall()
+    sample_ids = ['S011','S012','S013','S014','S015','S016','S017','S019','S020','S021','S022','S023']
     
-    if not to_delete:
-        return jsonify({"message": "Nothing to delete", "students": []})
-    
-    ids = [s["student_id"] for s in to_delete]
-    
-    cursor.execute("DELETE FROM verification_logs WHERE student_id = ANY(%s)", (ids,))
-    cursor.execute("DELETE FROM students WHERE student_id = ANY(%s)", (ids,))
+    cursor.execute("DELETE FROM verification_logs WHERE student_id = ANY(%s)", (sample_ids,))
+    cursor.execute("DELETE FROM students WHERE student_id = ANY(%s)", (sample_ids,))
     conn.commit()
     cursor.close()
     conn.close()
     
-    return jsonify({
-        "message": f"Deleted {len(ids)} students",
-        "deleted": [dict(s) for s in to_delete]
-    })
+    return jsonify({"message": f"Deleted {len(sample_ids)} students successfully"})
+
 @app.route("/api/student/<student_id>")
 @login_required
 def get_student(student_id):
